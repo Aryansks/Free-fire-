@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang='en'><head><meta charset='UTF-8'><meta name='viewport'content='width=device-width,initial-scale=1.0'>
+<title>Free Fire Max Sensi</title>
+<style>
+body{margin:0;background:#000;color:#fff;font-family:Arial;text-align:center;padding:20px}
+input,button{padding:10px;margin-top:10px;border-radius:6px;border:0}
+input{width:80%;background:#111;color:#fff;border:1px solid #444}
+button{font-weight:bold;cursor:pointer}
+.neon{background:linear-gradient(90deg,#ff3b3b,#ff8a00);color:#fff}
+.hidden{display:none}
+</style></head><body>
+<div id="login"><h1>PRO PLAYER LOGIN</h1>
+<input id="user"placeholder="Username"><input id="pass"placeholder="Password"type="password">
+<button class="neon"onclick="login()">Login</button></div>
+
+<div id="home" class="hidden"><h1>Welcome <span id="uname"></span></h1>
+<button class="neon"onclick="openSensi()">SENSI</button></div>
+
+<div id="sensi" class="hidden"><h2>Select Company</h2>
+<select id="comp" onchange="loadModels()">
+<option>Samsung</option><option>Xiaomi</option><option>Apple</option>
+</select><div id="models"></div></div>
+
+<script>
+const dev={u:'dev999',p:'devpass'};let user=null;
+function login(){
+ let u=user=document.getElementById('user').value;
+ let p=document.getElementById('pass').value;
+ if(!u||!p)return alert('Enter login');
+ document.getElementById('login').classList.add('hidden');
+ document.getElementById('home').classList.remove('hidden');
+ document.getElementById('uname').innerText=u;
+}
+function openSensi(){document.getElementById('sensi').classList.remove('hidden');}
+function loadModels(){
+ let c=document.getElementById('comp').value,box=document.getElementById('models');box.innerHTML='';
+ ['Model A','Model B','Model C'].forEach(m=>{let b=document.createElement('button');b.innerText=m;b.className='neon';b.onclick=_=>alert('Request sent for '+c+' '+m);box.appendChild(b);});
+}
+</script>
+</body></html>
