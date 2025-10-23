@@ -106,9 +106,9 @@ const COMPANIES={
 // LocalStorage keys
 const LS_REQ='ff_req';
 const LS_ANN='ff_ann';
-const LS_SENS='ff_sens';
 let cart=[];
 let currentUser=null;
+let currentBuyItem=null;
 
 // Helpers
 function lsGet(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
@@ -122,7 +122,6 @@ function login(){
     let code=prompt('Enter developer code:');
     if(code!=='devpass'){alert('Wrong code'); return;}
     currentUser={username:'DEV999',role:'dev'};
-    document.getElementById('devDiv').classList.remove('hidden');
   } else {
     currentUser={username:u,role:'user'};
   }
@@ -144,7 +143,7 @@ function afterLogin(){
   document.getElementById('headerUser').innerText=currentUser.username;
   document.getElementById('logoutBtn').classList.remove('hidden');
   if(currentUser.role==='user'){document.getElementById('cartBtn').classList.remove('hidden'); renderRequests();}
-  if(currentUser.role==='dev'){renderDevRequests(); showAnnouncements();}
+  if(currentUser.role==='dev'){document.getElementById('devDiv').classList.remove('hidden'); renderDevRequests(); showAnnouncements();}
 }
 
 // Logout
@@ -198,28 +197,37 @@ function renderCart(){
   });
 }
 function cartContinue(){
+  if(cart.length===0){alert('Cart is empty'); return;}
+  document.getElementById('cartDiv').classList.add('hidden');
+  document.getElementById('buyFormDiv').classList.remove('hidden');
+  currentBuyItem=null;
+}
 
-// Buy Now - Direct form
-let currentBuyItem=null;
+// Buy Now
 function buyNow(comp,model){
   currentBuyItem={company:comp,model:model};
   document.getElementById('sensiDiv').classList.add('hidden');
   document.getElementById('buyFormDiv').classList.remove('hidden');
 }
 
-// Send Buy Now request
+// Send Buy Now / Cart request
 function sendBuyRequest(){
-  if(!currentBuyItem){alert('No item selected'); return;}
   let fname=document.getElementById('buyName').value.trim();
   let lname=document.getElementById('buyLast').value.trim();
   let uid=document.getElementById('buyUID').value.trim();
   if(!fname||!lname||!uid){alert('Fill all fields'); return;}
   let reqs=lsGet(LS_REQ,[]);
-  reqs.unshift({id:Date.now()+Math.random(),user:currentUser.username,company:currentBuyItem.company,model:currentBuyItem.model,
-               status:'pending',form:{fname,lname,uid}});
+  if(currentBuyItem){ // Buy Now
+    reqs.unshift({id:Date.now()+Math.random(),user:currentUser.username,company:currentBuyItem.company,model:currentBuyItem.model,status:'pending',form:{fname,lname,uid}});
+    currentBuyItem=null;
+  } else { // Cart
+    cart.forEach(item=>{
+      reqs.unshift({id:Date.now()+Math.random(),user:currentUser.username,company:item.company,model:item.model,status:'pending',form:{fname,lname,uid}});
+    });
+    cart=[];
+  }
   lsSet(LS_REQ,reqs);
   alert('Request sent successfully!');
-  currentBuyItem=null;
   document.getElementById('buyName').value='';
   document.getElementById('buyLast').value='';
   document.getElementById('buyUID').value='';
@@ -228,15 +236,7 @@ function sendBuyRequest(){
   renderDevRequests();
 }
 
-// Cart Continue → Form
-function cartContinue(){
-  if(cart.length===0){alert('Cart is empty'); return;}
-  currentBuyItem=null;
-  document.getElementById('cartDiv').classList.add('hidden');
-  document.getElementById('buyFormDiv').classList.remove('hidden');
-}
-
-// Requests - User view
+// Requests for user
 function renderRequests(){
   if(!currentUser||currentUser.role!=='user') return;
   let reqs=lsGet(LS_REQ,[]).filter(r=>r.user===currentUser.username);
@@ -251,7 +251,7 @@ function renderRequests(){
   });
 }
 
-// Device-specific FF Sensitivity (Format B)
+// Device Sensitivity
 function generateSensi(model){
   const sensiValues={
     "Redmi Note 13 Pro 📱":{General:95,RedDot:88,TwoX:80,FourX:75,Sniper:65,FreeLook:90},
@@ -272,52 +272,4 @@ function renderDevRequests(){
   if(reqs.length===0){devrl.innerText='No requests'; return;}
   reqs.forEach((r,idx)=>{
     let d=document.createElement('div'); d.className='card';
-    d.innerHTML=`${r.user} - ${r.company} ${r.model} <br>
-    <button onclick="acceptReq(${idx})">Accept</button>
-    <button onclick="rejectReq(${idx})">Reject</button>`;
-    devrl.appendChild(d);
-  });
-}
-
-// Accept / Reject
-function acceptReq(idx){
-  let reqs=lsGet(LS_REQ,[]);
-  reqs[idx].status='accepted';
-  lsSet(LS_REQ,reqs);
-  renderDevRequests();
-  renderRequests();
-}
-function rejectReq(idx){
-  let reqs=lsGet(LS_REQ,[]);
-  reqs[idx].status='declined'; // only mark as declined for user
-  lsSet(LS_REQ,reqs);
-  renderDevRequests();
-  renderRequests();
-}
-
-// Announcements
-function sendAnnouncement(){
-  let text=document.getElementById('announcementText').value.trim();
-  if(!text){alert('Enter message'); return;}
-  let anns=lsGet(LS_ANN,[]); anns.unshift({message:text,date:new Date().toLocaleString()}); lsSet(LS_ANN,anns); alert('Announcement sent'); document.getElementById('announcementText').value='';
-  showAnnouncements();
-}
-function showAnnouncements(){
-  if(currentUser.role!=='user') return;
-  let anns=lsGet(LS_ANN,[]);
-  let container=document.createElement('div');
-  anns.forEach(a=>{
-    let d=document.createElement('div'); d.className='card';
-    d.innerHTML=`📢 ${a.message} <br><small>${a.date}</small>`;
-    container.appendChild(d);
-  });
-  document.getElementById('homeDiv').appendChild(container);
-}
-
-// Contact
-document.write('<div class="container"><h3>Contact: <a href="mailto:as7027506@gmail.com" style="color:red;">as7027506@gmail.com</a></h3></div>');
-
-</script>
-</body>
-</html>
- 
+    d.innerHTML=`${r.user} - ${
