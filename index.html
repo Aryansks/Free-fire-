@@ -1,40 +1,217 @@
 <!DOCTYPE html>
-<html lang='en'><head><meta charset='UTF-8'><meta name='viewport'content='width=device-width,initial-scale=1.0'>
-<title>Free Fire Max Sensi</title>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FF Max Sensi - Extreme Gaming</title>
 <style>
-body{margin:0;background:#000;color:#fff;font-family:Arial;text-align:center;padding:20px}
-input,button{padding:10px;margin-top:10px;border-radius:6px;border:0}
-input{width:80%;background:#111;color:#fff;border:1px solid #444}
-button{font-weight:bold;cursor:pointer}
-.neon{background:linear-gradient(90deg,#ff3b3b,#ff8a00);color:#fff}
-.hidden{display:none}
-</style></head><body>
-<div id="login"><h1>PRO PLAYER LOGIN</h1>
-<input id="user"placeholder="Username"><input id="pass"placeholder="Password"type="password">
-<button class="neon"onclick="login()">Login</button></div>
+body { margin:0; background:#000; color:#fff; font-family:Arial, sans-serif; }
+header{display:flex;justify-content:space-between;padding:10px;background:#0a0a0a;border-bottom:2px solid red;}
+button{padding:10px 20px;margin:5px;font-size:16px;background:red;color:#fff;border:none;border-radius:6px;cursor:pointer;}
+.hidden{display:none;}
+.container{padding:20px;}
+h1,h2,h3{color:red;}
+.card{background:#111;padding:15px;margin:10px 0;border-radius:8px;border:1px solid #222;}
+select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;background:#111;color:#fff;width:100%;}
+.animated{animation:pulse 2s infinite;}
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
+</style>
+</head>
+<body>
 
-<div id="home" class="hidden"><h1>Welcome <span id="uname"></span></h1>
-<button class="neon"onclick="openSensi()">SENSI</button></div>
+<header>
+<div id="headerUser">Not logged</div>
+<div>
+<button id="logoutBtn" class="hidden" onclick="logout()">LOGOUT</button>
+<button id="cartBtn" class="hidden" onclick="openCart()">🛒 Cart</button>
+</div>
+</header>
 
-<div id="sensi" class="hidden"><h2>Select Company</h2>
-<select id="comp" onchange="loadModels()">
-<option>Samsung</option><option>Xiaomi</option><option>Apple</option>
-</select><div id="models"></div></div>
+<div class="container" id="loginDiv">
+<h1>Login</h1>
+<input type="text" id="loginUser" placeholder="Enter username">
+<button onclick="login()">Login</button>
+</div>
+
+<div class="container hidden" id="homeDiv">
+<h1>Welcome <span id="uname"></span></h1>
+<button onclick="showSensi()">SENSI</button>
+<button onclick="showRequests()">REQUESTS</button>
+</div>
+
+<div class="container hidden" id="sensiDiv">
+<h2>Select Company & Model</h2>
+<select id="companySelect" onchange="renderModels()"></select><br><br>
+<div id="modelList"></div>
+<button onclick="backHome()">Back</button>
+</div>
+
+<div class="container hidden" id="requestsDiv">
+<h2>My Requests</h2>
+<div id="reqList">No requests yet</div>
+<button onclick="backHome()">Back</button>
+</div>
+
+<div class="container hidden" id="cartDiv">
+<h2>Cart</h2>
+<div id="cartList">Cart is empty</div>
+<button onclick="backHome()">Back</button>
+</div>
+
+<div class="container hidden" id="devDiv">
+<h2>Developer Panel</h2>
+<h3>Requests</h3>
+<div id="devReqList">No requests</div>
+<h3>Announcements</h3>
+<textarea id="announcementText" placeholder="Type announcement..." style="width:100%;height:60px;"></textarea><br>
+<button onclick="sendAnnouncement()">Send Announcement</button>
+</div>
 
 <script>
-const dev={u:'dev999',p:'devpass'};let user=null;
+// Data
+const COMPANIES={
+"Xiaomi":["Redmi Note 13 Pro","Redmi Note 13 Pro+","Mi 12","Mi 11","Mi 10"],
+"iPhone":["iPhone 16e","iPhone 15 Pro","iPhone 15","iPhone 14 Pro","iPhone 14"],
+"Samsung":["Galaxy S23 Ultra","Galaxy S23+","Galaxy S23","Galaxy S22 Ultra","Galaxy S22"]
+};
+const LS_REQ='ff_req';
+const LS_ANN='ff_ann';
+const LS_SENS='ff_sens';
+let cart=[];
+let currentUser=null;
+
+// Helpers
+function lsGet(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
+function lsSet(k,v){localStorage.setItem(k,JSON.stringify(v))}
+
+// Login
 function login(){
- let u=user=document.getElementById('user').value;
- let p=document.getElementById('pass').value;
- if(!u||!p)return alert('Enter login');
- document.getElementById('login').classList.add('hidden');
- document.getElementById('home').classList.remove('hidden');
- document.getElementById('uname').innerText=u;
+  let u=document.getElementById('loginUser').value.trim();
+  if(!u){alert('Enter username'); return;}
+  if(u.toUpperCase()==='DEV999'){
+    let code=prompt('Enter developer code:');
+    if(code!=='devpass'){alert('Wrong code'); return;}
+    currentUser={username:'DEV999',role:'dev'};
+    document.getElementById('devDiv').classList.remove('hidden');
+  } else {
+    currentUser={username:u,role:'user'};
+  }
+  lsSet('ff_user',currentUser);
+  afterLogin();
 }
-function openSensi(){document.getElementById('sensi').classList.remove('hidden');}
-function loadModels(){
- let c=document.getElementById('comp').value,box=document.getElementById('models');box.innerHTML='';
- ['Model A','Model B','Model C'].forEach(m=>{let b=document.createElement('button');b.innerText=m;b.className='neon';b.onclick=_=>alert('Request sent for '+c+' '+m);box.appendChild(b);});
+
+// Auto-login
+window.onload=function(){
+  let u=lsGet('ff_user',null);
+  if(u){currentUser=u; afterLogin();}
+  populateCompanies();
+}
+
+// After login
+function afterLogin(){
+  document.getElementById('loginDiv').classList.add('hidden');
+  document.getElementById('homeDiv').classList.remove('hidden');
+  document.getElementById('headerUser').innerText=currentUser.username;
+  document.getElementById('logoutBtn').classList.remove('hidden');
+  if(currentUser.role==='user'){document.getElementById('cartBtn').classList.remove('hidden'); renderRequests();}
+  if(currentUser.role==='dev'){renderDevRequests(); showAnnouncements();}
+}
+
+// Logout
+function logout(){localStorage.removeItem('ff_user');location.reload();}
+
+// SENSI & Models
+function populateCompanies(){
+  let sel=document.getElementById('companySelect');
+  sel.innerHTML=''; for(let c in COMPANIES){let o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);}
+  renderModels();
+}
+function renderModels(){
+  let comp=document.getElementById('companySelect').value;
+  let ml=document.getElementById('modelList'); ml.innerHTML='';
+  COMPANIES[comp].forEach(m=>{
+    let d=document.createElement('div'); d.className='card'; 
+    d.innerHTML=`<strong>${m}</strong><br><button onclick="addToCart('${comp}','${m}')">Add to Cart 🛒</button> <button onclick="buyNow('${comp}','${m}')">Buy Now</button>`;
+    ml.appendChild(d);
+  });
+}
+function showSensi(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('sensiDiv').classList.remove('hidden');}
+function showRequests(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('requestsDiv').classList.remove('hidden');renderRequests();}
+function backHome(){document.getElementById('sensiDiv').classList.add('hidden');document.getElementById('requestsDiv').classList.add('hidden');document.getElementById('cartDiv').classList.add('hidden');document.getElementById('homeDiv').classList.remove('hidden');}
+
+// Cart
+function addToCart(comp,model){cart.push({company:comp,model:model,status:'pending'}); alert(model+' added to cart'); renderCart();}
+function buyNow(comp,model){cart=[{company:comp,model:model,status:'pending'}]; renderCart(); openCart();}
+function openCart(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('cartDiv').classList.remove('hidden'); renderCart();}
+function renderCart(){let cl=document.getElementById('cartList'); cl.innerHTML=''; if(cart.length===0){cl.innerText='Cart is empty'; return;} cart.forEach((c,i)=>{let d=document.createElement('div');d.className='card';d.innerHTML=`${c.company} - ${c.model} <button onclick="sendRequest(${i})">Send Request</button>`; cl.appendChild(d);});}// Send Request
+function sendRequest(i){
+  let r=cart[i]; let reqs=lsGet(LS_REQ,[]);
+  reqs.unshift({id:Date.now()+Math.random(),user:currentUser.username,company:r.company,model:r.model,status:'pending'});
+  lsSet(LS_REQ,reqs); alert('Request sent'); renderRequests(); renderDevRequests();
+}
+
+// Requests display for user
+function renderRequests(){
+  if(!currentUser || currentUser.role!=='user') return;
+  let reqs=lsGet(LS_REQ,[]).filter(r=>r.user===currentUser.username);
+  let rl=document.getElementById('reqList'); rl.innerHTML=''; if(reqs.length===0){rl.innerText='No requests yet'; return;}
+  reqs.forEach(r=>{
+    let d=document.createElement('div'); d.className='card';
+    let sensi='';
+    if(r.status==='accepted'){sensi=generateSensi(r.model);}
+    d.innerHTML=`${r.company} - ${r.model} <br>Status: ${r.status.toUpperCase()} ${sensi}`;
+    rl.appendChild(d);
+  });
+}
+
+// Auto sensitivity for each device (Format B)
+function generateSensi(model){
+  let sensiValues={
+    "Redmi Note 13 Pro":{General:95,RedDot:88,TwoX:80,FourX:75,Sniper:65,FreeLook:90},
+    "Redmi Note 13 Pro+":{General:96,RedDot:89,TwoX:81,FourX:76,Sniper:66,FreeLook:91},
+    "Mi 12":{General:94,RedDot:87,TwoX:79,FourX:74,Sniper:64,FreeLook:89},
+    "iPhone 16e":{General:97,RedDot:90,TwoX:82,FourX:77,Sniper:67,FreeLook:92},
+    "Galaxy S23 Ultra":{General:95,RedDot:88,TwoX:80,FourX:75,Sniper:65,FreeLook:90}
+  };
+  let s=sensiValues[model]||{General:90,RedDot:85,TwoX:78,FourX:70,Sniper:60,FreeLook:85};
+  return `<br><pre>🔥 FF MAX PRO SENSITIVITY - AUTO OPTIMIZED\n📱 Device: ${model}\n✅ Mode: Custom PRO Controller\nGeneral: ${s.General}\nRed Dot: ${s.RedDot}\n2X Scope: ${s.TwoX}\n4X Scope: ${s.FourX}\nSniper: ${s.Sniper}\nFree Look: ${s.FreeLook}</pre>`;
+}
+
+// Developer panel requests
+function renderDevRequests(){
+  if(!currentUser || currentUser.role!=='dev') return;
+  let reqs=lsGet(LS_REQ,[]);
+  let devrl=document.getElementById('devReqList'); devrl.innerHTML=''; if(reqs.length===0){devrl.innerText='No requests'; return;}
+  reqs.forEach((r,idx)=>{
+    let d=document.createElement('div'); d.className='card';
+    d.innerHTML=`${r.user} - ${r.company} ${r.model} <br>
+    <button onclick="acceptReq(${idx})">Accept</button>
+    <button onclick="rejectReq(${idx})">Reject</button>`;
+    devrl.appendChild(d);
+  });
+}
+
+// Accept / Reject
+function acceptReq(idx){let reqs=lsGet(LS_REQ,[]); reqs[idx].status='accepted'; lsSet(LS_REQ,reqs); renderDevRequests(); renderRequests();}
+function rejectReq(idx){let reqs=lsGet(LS_REQ,[]); reqs[idx].status='declined'; lsSet(LS_REQ,reqs); renderDevRequests(); renderRequests();}
+
+// Announcements
+function sendAnnouncement(){
+  let text=document.getElementById('announcementText').value.trim();
+  if(!text){alert('Enter message'); return;}
+  let anns=lsGet(LS_ANN,[]); anns.unshift({message:text,date:new Date().toLocaleString()}); lsSet(LS_ANN,anns); alert('Announcement sent'); document.getElementById('announcementText').value='';
+  showAnnouncements();
+}
+function showAnnouncements(){
+  if(currentUser.role!=='user') return;
+  let anns=lsGet(LS_ANN,[]); let container=document.createElement('div'); anns.forEach(a=>{let d=document.createElement('div'); d.className='card'; d.innerHTML=`📢 ${a.message} <br><small>${a.date}</small>`; container.appendChild(d);});
+  document.getElementById('homeDiv').appendChild(container);
 }
 </script>
-</body></html>
+
+<div class="container">
+<h3>Contact: <a href="mailto:as7027506@gmail.com" style="color:red;">as7027506@gmail.com</a></h3>
+</div>
+
+</body>
+</html>
