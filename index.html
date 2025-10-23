@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FF Max Sensi - Extreme Gaming</title>
+<title>FF Max Sensi</title>
 <style>
 body { margin:0; background:#000; color:#fff; font-family:Arial, sans-serif; }
 header{display:flex;justify-content:space-between;padding:10px;background:#0a0a0a;border-bottom:2px solid red;}
@@ -29,21 +29,18 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 </div>
 </header>
 
-<!-- Login -->
 <div class="container" id="loginDiv">
 <h1>Login</h1>
 <input type="text" id="loginUser" placeholder="Enter username">
 <button onclick="login()">Login</button>
 </div>
 
-<!-- Home -->
 <div class="container hidden" id="homeDiv">
 <h1>Welcome <span id="uname"></span></h1>
 <button onclick="showSensi()">SENSI</button>
 <button onclick="showRequests()">REQUESTS</button>
 </div>
 
-<!-- SENSI -->
 <div class="container hidden" id="sensiDiv">
 <h2>Select Company & Model</h2>
 <select id="companySelect" onchange="renderModels()"></select><br><br>
@@ -51,14 +48,12 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 <button onclick="backHome()">Back</button>
 </div>
 
-<!-- Requests -->
 <div class="container hidden" id="requestsDiv">
 <h2>My Requests</h2>
 <div id="reqList">No requests yet</div>
 <button onclick="backHome()">Back</button>
 </div>
 
-<!-- Cart -->
 <div class="container hidden" id="cartDiv">
 <h2>Cart</h2>
 <div id="cartList">Cart is empty</div>
@@ -66,9 +61,8 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 <button onclick="backHome()">Back</button>
 </div>
 
-<!-- Buy Now / Form -->
 <div class="container hidden" id="buyFormDiv">
-<h2>Buy Now - Fill Form</h2>
+<h2>Buy Now / Fill Form</h2>
 <input type="text" id="buyName" placeholder="First Name"><br><br>
 <input type="text" id="buyLast" placeholder="Last Name"><br><br>
 <input type="text" id="buyUID" placeholder="In-Game UID"><br><br>
@@ -76,7 +70,6 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 <button onclick="backHome()">Cancel</button>
 </div>
 
-<!-- Developer Panel -->
 <div class="container hidden" id="devDiv">
 <h2>Developer Panel</h2>
 <h3>Requests</h3>
@@ -149,7 +142,7 @@ function afterLogin(){
 // Logout
 function logout(){localStorage.removeItem('ff_user');location.reload();}
 
-// SENSI & Models
+// Populate companies
 function populateCompanies(){
   let sel=document.getElementById('companySelect');
   sel.innerHTML=''; for(let c in COMPANIES){let o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);}
@@ -166,6 +159,8 @@ function renderModels(){
     ml.appendChild(d);
   });
 }
+
+// Navigation
 function showSensi(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('sensiDiv').classList.remove('hidden');}
 function showRequests(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('requestsDiv').classList.remove('hidden');renderRequests();}
 function backHome(){
@@ -177,99 +172,72 @@ function backHome(){
 }
 
 // Cart
-function addToCart(comp,model){
-  cart.push({company:comp,model:model,status:'pending'});
-  alert(model+' added to cart');
-}
-function openCart(){
-  document.getElementById('homeDiv').classList.add('hidden');
-  document.getElementById('cartDiv').classList.remove('hidden');
-  renderCart();
-}
+function addToCart(comp,model){cart.push({company:comp,model:model}); alert(model+' added to cart');}
+function openCart(){document.getElementById('homeDiv').classList.add('hidden'); document.getElementById('cartDiv').classList.remove('hidden'); renderCart();}
 function renderCart(){
-  let cl=document.getElementById('cartList');
-  cl.innerHTML='';
+  let cl=document.getElementById('cartList'); cl.innerHTML='';
   if(cart.length===0){cl.innerText='Cart is empty'; return;}
-  cart.forEach((c,i)=>{
-    let d=document.createElement('div'); d.className='card';
-    d.innerHTML=`${c.company} - ${c.model}`;
-    cl.appendChild(d);
-  });
+  cart.forEach((c,i)=>{ let d=document.createElement('div'); d.className='card'; d.innerText=`${c.company} - ${c.model}`; cl.appendChild(d); });
 }
-function cartContinue(){
-  if(cart.length===0){alert('Cart is empty'); return;}
-  document.getElementById('cartDiv').classList.add('hidden');
-  document.getElementById('buyFormDiv').classList.remove('hidden');
-  currentBuyItem=null;
-}
+function cartContinue(){if(cart.length===0){alert('Cart is empty'); return;} document.getElementById('cartDiv').classList.add('hidden'); document.getElementById('buyFormDiv').classList.remove('hidden'); currentBuyItem=null;}
 
 // Buy Now
-function buyNow(comp,model){
-  currentBuyItem={company:comp,model:model};
-  document.getElementById('sensiDiv').classList.add('hidden');
-  document.getElementById('buyFormDiv').classList.remove('hidden');
-}
+function buyNow(comp,model){currentBuyItem={company:comp,model:model}; document.getElementById('sensiDiv').classList.add('hidden'); document.getElementById('buyFormDiv').classList.remove('hidden');}
 
-// Send Buy Now / Cart request
+// Send request
 function sendBuyRequest(){
   let fname=document.getElementById('buyName').value.trim();
   let lname=document.getElementById('buyLast').value.trim();
   let uid=document.getElementById('buyUID').value.trim();
   if(!fname||!lname||!uid){alert('Fill all fields'); return;}
   let reqs=lsGet(LS_REQ,[]);
-  if(currentBuyItem){ // Buy Now
-    reqs.unshift({id:Date.now()+Math.random(),user:currentUser.username,company:currentBuyItem.company,model:currentBuyItem.model,status:'pending',form:{fname,lname,uid}});
-    currentBuyItem=null;
-  } else { // Cart
-    cart.forEach(item=>{
-      reqs.unshift({id:Date.now()+Math.random(),user:currentUser.username,company:item.company,model:item.model,status:'pending',form:{fname,lname,uid}});
-    });
-    cart=[];
-  }
-  lsSet(LS_REQ,reqs);
-  alert('Request sent successfully!');
-  document.getElementById('buyName').value='';
-  document.getElementById('buyLast').value='';
-  document.getElementById('buyUID').value='';
-  backHome();
-  renderRequests();
-  renderDevRequests();
+  if(currentBuyItem){reqs.unshift({id:Date.now()+Math.random(),user:currentUser.username,company:currentBuyItem.company,model:currentBuyItem.model,status:'pending',form:{fname,lname,uid}}); currentBuyItem=null;}
+  else {cart.forEach(item=>{reqs.unshift({id:Date.now()+Math.random(),user:currentUser.username,company:item.company,model:item.model,status:'pending',form:{fname,lname,uid}});}); cart=[];}
+  lsSet(LS_REQ,reqs); alert('Request sent successfully!');
+  document.getElementById('buyName').value=''; document.getElementById('buyLast').value=''; document.getElementById('buyUID').value='';
+  backHome(); renderRequests(); renderDevRequests();
 }
 
-// Requests for user
+// Requests user
 function renderRequests(){
   if(!currentUser||currentUser.role!=='user') return;
   let reqs=lsGet(LS_REQ,[]).filter(r=>r.user===currentUser.username);
   let rl=document.getElementById('reqList'); rl.innerHTML='';
   if(reqs.length===0){rl.innerText='No requests yet'; return;}
-  reqs.forEach(r=>{
-    let d=document.createElement('div'); d.className='card';
-    let sensi='';
-    if(r.status==='accepted'){sensi=generateSensi(r.model);}
-    d.innerHTML=`${r.company} - ${r.model} <br>Status: ${r.status.toUpperCase()} ${sensi}`;
-    rl.appendChild(d);
-  });
+  reqs.forEach(r=>{let d=document.createElement('div'); d.className='card'; let sensi=''; if(r.status==='accepted'){sensi=generateSensi(r.model);} d.innerHTML=`${r.company} - ${r.model} <br>Status: ${r.status.toUpperCase()} ${sensi}`; rl.appendChild(d); });
 }
 
-// Device Sensitivity
+// Sensitivity
 function generateSensi(model){
-  const sensiValues={
-    "Redmi Note 13 Pro 📱":{General:95,RedDot:88,TwoX:80,FourX:75,Sniper:65,FreeLook:90},
-    "Redmi Note 13 Pro+ 🔥":{General:96,RedDot:89,TwoX:81,FourX:76,Sniper:66,FreeLook:91},
-    "Mi 12 🌀":{General:94,RedDot:87,TwoX:79,FourX:74,Sniper:64,FreeLook:89},
-    "iPhone 16e 🍏":{General:97,RedDot:90,TwoX:82,FourX:77,Sniper:67,FreeLook:92},
-    "Galaxy S23 Ultra":{General:95,RedDot:88,TwoX:80,FourX:75,Sniper:65,FreeLook:90}
-  };
+  const sensiValues={"Redmi Note 13 Pro 📱":{General:95,RedDot:88,TwoX:80,FourX:75,Sniper:65,FreeLook:90}};
   let s=sensiValues[model]||{General:90,RedDot:85,TwoX:78,FourX:70,Sniper:60,FreeLook:85};
   return `<br><pre>🔥 FF MAX PRO SENSITIVITY\n📱 Device: ${model}\nGeneral: ${s.General}\nRed Dot: ${s.RedDot}\n2X Scope: ${s.TwoX}\n4X Scope: ${s.FourX}\nSniper: ${s.Sniper}\nFree Look: ${s.FreeLook}</pre>`;
 }
 
-// Developer Panel
+// Developer panel
 function renderDevRequests(){
-  if(!currentUser || currentUser.role!=='dev') return;
+  if(!currentUser||currentUser.role!=='dev') return;
   let reqs=lsGet(LS_REQ,[]);
   let devrl=document.getElementById('devReqList'); devrl.innerHTML='';
   if(reqs.length===0){devrl.innerText='No requests'; return;}
   reqs.forEach((r,idx)=>{
     let d=document.createElement('div'); d.className='card';
-    d.innerHTML=`${r.user} - ${
+    d.innerHTML=`${r.user} - ${r.company} ${r.model}<br>
+    <button onclick="acceptReq(${idx})">Accept</button>
+    <button onclick="rejectReq(${idx})">Reject</button>`;
+    devrl.appendChild(d);
+  });
+}
+function acceptReq(idx){let reqs=lsGet(LS_REQ,[]); reqs[idx].status='accepted'; lsSet(LS_REQ,reqs); renderDevRequests(); renderRequests();}
+function rejectReq(idx){let reqs=lsGet(LS_REQ,[]); reqs[idx].status='declined'; lsSet(LS_REQ,reqs); renderDevRequests(); renderRequests();}
+
+// Announcements
+function sendAnnouncement(){let text=document.getElementById('announcementText').value.trim(); if(!text){alert('Enter message'); return;} let anns=lsGet(LS_ANN,[]); anns.unshift({message:text,date:new Date().toLocaleString()}); lsSet(LS_ANN,anns); alert('Announcement sent'); document.getElementById('announcementText').value=''; showAnnouncements();}
+function showAnnouncements(){if(currentUser.role!=='user') return; let anns=lsGet(LS_ANN,[]); let container=document.createElement('div'); anns.forEach(a=>{let d=document.createElement('div'); d.className='card'; d.innerHTML=`📢 ${a.message}<br><small>${a.date}</small>`; container.appendChild(d);}); document.getElementById('homeDiv').appendChild(container);}
+
+// Contact
+document.write('<div class="container"><h3>Contact: <a href="mailto:as7027506@gmail.com" style="color:red;">as7027506@gmail.com</a></h3></div>');
+
+</script>
+</body>
+</html>
