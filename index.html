@@ -117,17 +117,9 @@ const COMPANIES={
 
 // --- Login & One-time login ---
 window.addEventListener('DOMContentLoaded', function() {
-    // One-time login check
     const storedUser = JSON.parse(localStorage.getItem('user'));
-    if(storedUser) {
-        currentUser = storedUser;
-        afterLogin();
-    }
-
-    // Populate companies after DOM ready
+    if(storedUser){ currentUser = storedUser; afterLogin(); }
     populateCompanies();
-
-    // Login button
     document.getElementById('loginBtn').addEventListener('click', function(){
         const uname = document.getElementById('loginUser').value.trim();
         if(!uname){ alert('Enter username'); return; }
@@ -135,10 +127,8 @@ window.addEventListener('DOMContentLoaded', function() {
             const code = prompt('Enter developer password:');
             if(code !== '999'){ alert('Wrong password'); return; }
             currentUser = {name:'DEV999', dev:true};
-        } else {
-            currentUser = {name:uname, dev:false};
-        }
-        localStorage.setItem('user', JSON.stringify(currentUser)); // persist login
+        } else { currentUser = {name:uname, dev:false}; }
+        localStorage.setItem('user', JSON.stringify(currentUser));
         afterLogin();
     });
 });
@@ -167,8 +157,8 @@ function afterLogin(){
     }
 }
 
-// --- Rest of functions (SENSI, Requests, Cart, Announcements) ---
-// Same as previous complete code provided
+// --- Rest of functions: SENSI, Requests, Cart, Announcements ---
+// Use the previous fully working functions from the last complete code snippet
 
 </script>
 </body>
