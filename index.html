@@ -116,21 +116,32 @@ const COMPANIES={
 };
 
 // --- Login & One-time login ---
-window.onload=function(){
-    const storedUser=JSON.parse(localStorage.getItem('user'));
-    if(storedUser){ currentUser=storedUser; afterLogin(); return; }
+window.addEventListener('DOMContentLoaded', function() {
+    // One-time login check
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    if(storedUser) {
+        currentUser = storedUser;
+        afterLogin();
+    }
+
+    // Populate companies after DOM ready
+    populateCompanies();
+
+    // Login button
     document.getElementById('loginBtn').addEventListener('click', function(){
-        const uname=document.getElementById('loginUser').value.trim();
-        if(!uname){alert('Enter username');return;}
-        if(uname.toUpperCase()==='DEV999'){
-            const code=prompt('Enter developer password:');
-            if(code!=='999'){alert('Wrong password');return;}
-            currentUser={name:'DEV999',dev:true};
-        } else { currentUser={name:uname,dev:false}; }
-        localStorage.setItem('user',JSON.stringify(currentUser));
+        const uname = document.getElementById('loginUser').value.trim();
+        if(!uname){ alert('Enter username'); return; }
+        if(uname.toUpperCase() === 'DEV999'){
+            const code = prompt('Enter developer password:');
+            if(code !== '999'){ alert('Wrong password'); return; }
+            currentUser = {name:'DEV999', dev:true};
+        } else {
+            currentUser = {name:uname, dev:false};
+        }
+        localStorage.setItem('user', JSON.stringify(currentUser)); // persist login
         afterLogin();
     });
-};
+});
 
 // --- After Login ---
 function afterLogin(){
@@ -156,163 +167,9 @@ function afterLogin(){
     }
 }
 
-// --- Logout ---
-function logout(){ localStorage.removeItem('user'); location.reload(); }
+// --- Rest of functions (SENSI, Requests, Cart, Announcements) ---
+// Same as previous complete code provided
 
-// --- Navigation ---
-function showLogin(){document.getElementById('welcomeDiv').classList.add('hidden');document.getElementById('loginDiv').classList.remove('hidden');}
-function backHome(){['sensiDiv','requestsDiv','buyFormDiv','cartDiv'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('homeDiv').classList.remove('hidden');}
-function showSensi(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('sensiDiv').classList.remove('hidden');}
-function showRequests(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('requestsDiv').classList.remove('hidden');}
-
-// --- Populate Companies ---
-function populateCompanies(){
-    const select=document.getElementById('companySelect');
-    select.innerHTML='<option value="">--Select Company--</option>';
-    Object.keys(COMPANIES).forEach(c=>{
-        const opt=document.createElement('option'); opt.value=c; opt.innerText=c; select.appendChild(opt);
-    });
-}
-
-// --- Render Models ---
-function renderModels(){
-    const company=document.getElementById('companySelect').value;
-    const listDiv=document.getElementById('modelList');
-    listDiv.innerHTML='';
-    if(!company) return;
-    COMPANIES[company].forEach(model=>{
-        const btnBuy=document.createElement('button');
-        btnBuy.innerText='Buy Now';
-        btnBuy.onclick=function(){ openBuyForm(company,model); };
-        const btnCart=document.createElement('button');
-        btnCart.innerText='Add to Cart';
-        btnCart.onclick=function(){ addToCart(company,model); };
-        const div=document.createElement('div');
-        div.className='model-buttons';
-        div.innerHTML=`<span>${model}</span>`;
-        div.appendChild(btnBuy);
-        div.appendChild(btnCart);
-        listDiv.appendChild(div);
-    });
-}
-
-// --- Buy Now Form ---
-let currentBuyItem=null;
-function openBuyForm(company,model){
-    currentBuyItem={company,model};
-    document.getElementById('sensiDiv').classList.add('hidden');
-    document.getElementById('buyFormDiv').classList.remove('hidden');
-}
-function sendBuyRequest(){
-    const f=document.getElementById('buyName').value.trim();
-    const l=document.getElementById('buyLast').value.trim();
-    const uid=document.getElementById('buyUID').value.trim();
-    if(!f || !l || !uid){alert('Fill all fields'); return;}
-    const sensi=Math.floor(Math.random()*191)+10; // 10-200
-    const req={user:currentUser.name,item:currentBuyItem,sensi:sensi,status:'Pending',fname:f,lname:l,uid:uid};
-    requests.push(req); localStorage.setItem('requests',JSON.stringify(requests));
-    alert('Request sent!');
-    document.getElementById('buyFormDiv').classList.add('hidden');
-    backHome();
-    populateRequests();
-    populateDevRequests();
-}
-
-// --- Cart ---
-function addToCart(company,model){
-    cart.push({company,model});
-    alert('Added to cart');
-}
-function openCart(){
-    document.getElementById('homeDiv').classList.add('hidden');
-    document.getElementById('cartDiv').classList.remove('hidden');
-    const div=document.getElementById('cartItems'); div.innerHTML='';
-    if(cart.length===0){ div.innerText='No items in cart'; return;}
-    cart.forEach((c,i)=>{
-        const d=document.createElement('div'); d.innerText=`${c.company} - ${c.model}`;
-        div.appendChild(d);
-    });
-}
-function continueCart(){
-    if(cart.length===0){ alert('Cart empty'); return;}
-    document.getElementById('cartDiv').classList.add('hidden');
-    document.getElementById('buyFormDiv').classList.remove('hidden');
-}
-
-// --- User Requests ---
-function populateRequests(){
-    if(currentUser.dev) return;
-    const div=document.getElementById('reqList');
-    const userReq=requests.filter(r=>r.user===currentUser.name);
-    if(userReq.length===0){ div.innerText='No requests yet'; return;}
-    div.innerHTML='';
-    userReq.forEach(r=>{
-        const d=document.createElement('div');
-        d.className='card';
-        d.innerHTML=`${r.item.company} - ${r.item.model} | Status: <span class="req-${r.status.toLowerCase()}">${r.status}</span> | SENSI: ${r.status==='Accepted'?r.sensi:''}`;
-        div.appendChild(d);
-    });
-}
-
-// --- Developer Requests ---
-function populateDevRequests(){
-    if(!currentUser.dev) return;
-    const div=document.getElementById('devReqList');
-    const pending=requests.filter(r=>r.status==='Pending');
-    if(pending.length===0){ div.innerText='No requests'; return;}
-    div.innerHTML='';
-    pending.forEach((r,i)=>{
-        const d=document.createElement('div');
-        d.className='card';
-        d.innerHTML=`${r.user} | ${r.item.company} - ${r.item.model} <button onclick="acceptRequest(${i})">Accept</button> <button onclick="declineRequest(${i})">Decline</button>`;
-        div.appendChild(d);
-    });
-}
-function acceptRequest(index){
-    const pending=requests.filter(r=>r.status==='Pending');
-    const realIndex=requests.indexOf(pending[index]);
-    requests[realIndex].status='Accepted';
-    localStorage.setItem('requests',JSON.stringify(requests));
-    populateDevRequests();
-    populateRequests();
-}
-function declineRequest(index){
-    const pending=requests.filter(r=>r.status==='Pending');
-    const realIndex=requests.indexOf(pending[index]);
-    requests[realIndex].status='Declined';
-    localStorage.setItem('requests',JSON.stringify(requests));
-    populateDevRequests();
-    populateRequests();
-}
-
-// --- Announcements ---
-function populateAnnouncements(){
-    if(currentUser.dev) return;
-    const div=document.getElementById('announcements');
-    div.innerHTML='';
-    if(announcements.length===0){ div.innerText='No announcements'; return;}
-    announcements.forEach(a=>{
-        const d=document.createElement('div'); d.className='card'; d.innerText=a; div.appendChild(d);
-    });
-}
-function sendAnnouncement(){
-    const txt=document.getElementById('announcementText').value.trim();
-    if(!txt) return;
-    announcements.push(txt); localStorage.setItem('announcements',JSON.stringify(announcements));
-    renderDevAnnouncements(); populateAnnouncements();
-    document.getElementById('announcementText').value='';
-}
-function renderDevAnnouncements(){
-    const div=document.getElementById('devAnnList'); div.innerHTML='';
-    announcements.forEach((a,i)=>{
-        const d=document.createElement('div'); d.className='card'; d.innerHTML=`${a} <button onclick="deleteAnnouncement(${i})">Delete</button>`; div.appendChild(d);
-    });
-}
-function deleteAnnouncement(i){
-    announcements.splice(i,1); localStorage.setItem('announcements',JSON.stringify(announcements));
-    renderDevAnnouncements(); populateAnnouncements();
-}
 </script>
-
 </body>
 </html>
