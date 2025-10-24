@@ -44,7 +44,7 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 <button id="loginBtn">Login</button>
 </div>
 
-<!-- Home -->
+<!-- User Home -->
 <div class="container hidden" id="homeDiv">
 <h1>Welcome <span id="uname"></span></h1>
 <div id="announcements" class="scrollable"></div>
@@ -60,7 +60,7 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 <button onclick="backHome()">Back</button>
 </div>
 
-<!-- Requests -->
+<!-- User Requests -->
 <div class="container hidden" id="requestsDiv">
 <h2>My Requests</h2>
 <div id="reqList" class="scrollable">No requests yet</div>
@@ -75,7 +75,7 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 <button onclick="backHome()">Back</button>
 </div>
 
-<!-- Buy Form (from Continue or Buy Now) -->
+<!-- Buy Form -->
 <div class="container hidden" id="buyFormDiv">
 <h2>Fill Form</h2>
 <input type="text" id="buyName" placeholder="First Name"><br>
@@ -108,14 +108,6 @@ const COMPANIES={
 "Xiaomi":["Redmi Note 13 Pro 📱","Redmi Note 13 Pro+ 🔥","Mi 12 🌀","Mi 11 ⚡","Poco X6 Pro 🎯","Redmi 12C","Redmi 11 Prime","Redmi K60 Ultra"],
 "iPhone":["iPhone 16e 🍏","iPhone 15 Pro 🌟","iPhone 15","iPhone 14 Pro","iPhone 14","iPhone 13","iPhone 12 Mini","iPhone SE 3"],
 "Samsung":["Galaxy S24 Ultra 💎","Galaxy S23 Ultra","Galaxy S23+","Galaxy S23","Galaxy A54","Galaxy A14","Galaxy Z Fold5","Galaxy Z Flip5"],
-"Realme":["Realme GT Neo 6 SE 🚀","Realme Narzo 60X","Realme 11 Pro","Realme 10","Realme 9 Pro+","Realme 8","Realme C55","Realme Narzo 70A"],
-"Vivo":["Vivo V27 Pro 🌈","Vivo V25","Vivo X90","Vivo X80 Pro","Vivo Y100","Vivo Y35","Vivo Y21","Vivo X90e"],
-"Oppo":["Oppo Reno 11 💠","Oppo Find X6","Oppo A77","Oppo F21 Pro","Oppo A17","Oppo A78","Oppo Reno 9","Oppo F19"],
-"OnePlus":["OnePlus 12 ⚡","OnePlus Nord 3 🌟","OnePlus 11","OnePlus 10T","OnePlus 10 Pro","OnePlus 9R","OnePlus 8T","OnePlus Nord CE 3"],
-"Infinix":["Infinix Zero Ultra 🔹","Infinix Note 30","Infinix Hot 20","Infinix Hot 12","Infinix Zero 5G","Infinix Hot 30","Infinix Note 30 Pro","Infinix Zero 20"],
-"Tecno":["Tecno Phantom X 🔥","Tecno Camon 20","Tecno Camon 19","Tecno Camon 18","Tecno Spark 10","Tecno Spark 9","Tecno Camon 17","Tecno Phantom 9"],
-"Huawei":["Huawei P60 Pro 🌌","Huawei Mate 50","Huawei Mate 40 Pro","Huawei P50 Pro","Huawei Mate 30 Pro","Huawei P40","Huawei Nova 11","Huawei Y9a"],
-"Asus ROG Phone":["ROG Phone 7 ⚡","ROG Phone 6D","ROG Phone 6","ROG Phone 5","ROG Phone 3","ROG Phone 2","ROG Phone 1","ROG Phone 5s"],
 "Nothing":["Nothing Phone 1 🔵","Nothing Phone 1T 🌟","Nothing Phone 2 🟡","Nothing Phone 2T ⚡","Nothing Phone 3 Pro 🌀","Nothing Phone 3a 🌟","Nothing Phone 4 🟢","Nothing Phone 4a 🔴"]
 };
 
@@ -288,7 +280,7 @@ function populateAnnouncements(){
     if(announcements.length===0){div.innerText='No announcements'; return;}
     announcements.forEach((a,i)=>{
         const d=document.createElement('div'); d.className='card';
-        d.innerHTML=`📢 ${a}${currentUser.dev?'<button onclick="deleteAnnouncement('+i+')">Delete</button>':''}`;
+        d.innerHTML=`📢 ${a}`;
         div.appendChild(d);
     });
 }
@@ -300,14 +292,6 @@ function sendAnnouncement(){
     localStorage.setItem('announcements',JSON.stringify(announcements));
     populateAnnouncements();
     document.getElementById('announcementText').value='';
-}
-
-function deleteAnnouncement(index){
-    if(confirm('Delete this announcement?')){
-        announcements.splice(index,1);
-        localStorage.setItem('announcements',JSON.stringify(announcements));
-        populateAnnouncements();
-    }
 }
 
 function populateDevRequests(){
@@ -327,13 +311,15 @@ function populateDevRequests(){
 function acceptRequest(index){
     requests[index].status='Accepted';
     localStorage.setItem('requests',JSON.stringify(requests));
-    populateRequests(); populateDevRequests();
+    populateRequests(); 
+    populateDevRequests(); // removed from dev panel immediately
 }
 
 function declineRequest(index){
     requests[index].status='Declined';
     localStorage.setItem('requests',JSON.stringify(requests));
-    populateRequests(); populateDevRequests();
+    populateRequests(); 
+    populateDevRequests(); // removed from dev panel immediately
 }
 
 function randomSensi(){
