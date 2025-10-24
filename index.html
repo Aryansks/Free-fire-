@@ -91,13 +91,13 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 </div>
 
 <script>
-// Data
+// --- Data ---
 let currentUser=null;
 let requests=JSON.parse(localStorage.getItem('requests'))||[];
 let announcements=JSON.parse(localStorage.getItem('announcements'))||[];
 let cart=[];
 
-// Companies + models
+// Companies + Models
 const COMPANIES={
 "Xiaomi":["Redmi Note 13 Pro 📱","Redmi Note 13 Pro+ 🔥","Mi 12 🌀","Mi 11 ⚡","Poco X6 Pro 🎯","Redmi 12C","Redmi 11 Prime","Redmi K60 Ultra"],
 "iPhone":["iPhone 16e 🍏","iPhone 15 Pro 🌟","iPhone 15","iPhone 14 Pro","iPhone 14","iPhone 13","iPhone 12 Mini","iPhone SE 3"],
@@ -116,61 +116,71 @@ const COMPANIES={
 "Honor":["Honor Magic 5","Honor 90","Honor X9a","Honor 80"]
 };
 
-// --- LOGIN ---
+// --- Login ---
 function showLogin(){
-    document.getElementById('welcomeDiv').classList.add('hidden');
-    document.getElementById('loginDiv').classList.remove('hidden');
+document.getElementById('welcomeDiv').classList.add('hidden');
+document.getElementById('loginDiv').classList.remove('hidden');
 }
 
-window.onload = function(){
-    const loginBtn=document.getElementById('loginBtn');
-    loginBtn.addEventListener('click',function(){
-        const uname=document.getElementById('loginUser').value.trim();
-        if(!uname){alert('Enter username'); return;}
-        if(uname.toUpperCase()==='DEV999'){
-            const code=prompt('Enter developer password:');
-            if(code!=='999'){alert('Wrong developer password'); return;}
-            currentUser={name:'DEV999',dev:true};
-        } else {
-            currentUser={name:uname,dev:false};
-        }
-        localStorage.setItem('user',JSON.stringify(currentUser));
-        afterLogin();
-    });
-
-    const user=JSON.parse(localStorage.getItem('user'));
-    if(user){currentUser=user; afterLogin();}
+window.onload=function(){
+const loginBtn=document.getElementById('loginBtn');
+loginBtn.addEventListener('click',function(){
+const uname=document.getElementById('loginUser').value.trim();
+if(!uname){alert('Enter username');return;}
+if(uname.toUpperCase()==='DEV999'){
+const code=prompt('Enter developer password:');
+if(code!=='999'){alert('Wrong password');return;}
+currentUser={name:'DEV999',dev:true};
+}else{
+currentUser={name:uname,dev:false};
+}
+localStorage.setItem('user',JSON.stringify(currentUser));
+afterLogin();
+});
+const user=JSON.parse(localStorage.getItem('user'));
+if(user){currentUser=user;afterLogin();}
 };
 
+// --- After Login ---
 function afterLogin(){
-    document.getElementById('loginDiv').classList.add('hidden');
-    document.getElementById('homeDiv').classList.remove('hidden');
-    document.getElementById('logoutBtn').classList.remove('hidden');
-    document.getElementById('cartBtn').classList.remove('hidden');
-    document.getElementById('uname').innerText=currentUser.name;
-    document.getElementById('headerUser').innerText=currentUser.dev?'Developer':'User';
-    populateAnnouncements();
-    populateRequests();
-    populateCompanies();
-    if(currentUser.dev){
-        document.getElementById('devDiv').classList.remove('hidden');
-        document.getElementById('sensiBtn').style.display='none';
-        document.getElementById('requestsBtn').style.display='none';
-        populateDevRequests();
-        renderDevAnnouncements();
-    } else {
-        document.getElementById('devDiv').classList.add('hidden');
-        document.getElementById('sensiBtn').style.display='inline-block';
-        document.getElementById('requestsBtn').style.display='inline-block';
-    }
+document.getElementById('loginDiv').classList.add('hidden');
+document.getElementById('homeDiv').classList.remove('hidden');
+document.getElementById('logoutBtn').classList.remove('hidden');
+document.getElementById('cartBtn').classList.remove('hidden');
+document.getElementById('uname').innerText=currentUser.name;
+document.getElementById('headerUser').innerText=currentUser.dev?'Developer':'User';
+populateAnnouncements();
+populateRequests();
+populateCompanies();
+if(currentUser.dev){
+document.getElementById('devDiv').classList.remove('hidden');
+document.getElementById('sensiBtn').style.display='none';
+document.getElementById('requestsBtn').style.display='none';
+populateDevRequests();
+renderDevAnnouncements();
+}else{
+document.getElementById('devDiv').classList.add('hidden');
+document.getElementById('sensiBtn').style.display='inline-block';
+document.getElementById('requestsBtn').style.display='inline-block';
 }
 
-// LOGOUT
+// Additional functions: renderModels(), addToCart(), buyNow(), openCart(), continueCart(), sendBuyRequest(), sendAnnouncement(), populateRequests(), populateDevRequests(), acceptRequest(), declineRequest(), etc. should be implemented here
+}
 function logout(){localStorage.removeItem('user'); location.reload();}
-
-// --- Add remaining functions: populateCompanies, renderModels, buyNow, addToCart, openCart, continueCart, sendBuyRequest, populateRequests, populateAnnouncements, sendAnnouncement, renderDevAnnouncements, populateDevRequests, acceptRequest, declineRequest, randomSensi ---
-// For brevity, these functions will follow the same structure as explained earlier.
-
+function backHome(){
+['sensiDiv','requestsDiv','buyFormDiv','cartDiv'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+document.getElementById('homeDiv').classList.remove('hidden');
+}
+function showSensi(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('sensiDiv').classList.remove('hidden');}
+function showRequests(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('requestsDiv').classList.remove('hidden');}
+function populateCompanies(){
+const select=document.getElementById('companySelect');
+select.innerHTML='<option value="">--Select Company--</option>';
+Object.keys(COMPANIES).forEach(c=>{
+const opt=document.createElement('option'); opt.value=c; opt.innerText=c; select.appendChild(opt);
+});
+}
 </script>
+
 </body>
 </html>
