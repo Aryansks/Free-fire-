@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FF Max Sensi</title>
 <style>
-body { margin:0; background:#000; color:#fff; font-family:Arial, sans-serif; }
-header{display:flex;justify-content:space-between;padding:10px;background:#0a0a0a;border-bottom:2px solid red;}
+body{margin:0;background:#000;color:#fff;font-family:Arial,sans-serif;}
+header{display:flex;justify-content:space-between;padding:10px;background:#0a0a0a;border-bottom:3px solid red;}
 button{padding:10px 20px;margin:5px;font-size:16px;background:red;color:#fff;border:none;border-radius:6px;cursor:pointer;transition:0.3s;}
 button:hover{transform:scale(1.05);}
 .hidden{display:none;}
@@ -15,11 +15,17 @@ h1,h2,h3{color:red;}
 .card{background:#111;padding:15px;margin:10px 0;border-radius:8px;border:1px solid #222;transition:0.3s;}
 .card:hover{transform:scale(1.02);}
 select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;background:#111;color:#fff;width:100%;}
+#splash{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;color:red;font-size:28px;z-index:1000;}
 .animated{animation:pulse 2s infinite;}
 @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
 </style>
 </head>
 <body>
+
+<div id="splash">
+<h1 class="animated">🔥 LOADING FF MAX SENSI SYSTEM 🔥</h1>
+<p>Preparing the ultimate gaming setup...</p>
+</div>
 
 <header>
 <div id="headerUser">Not logged</div>
@@ -29,18 +35,22 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 </div>
 </header>
 
+<!-- Login -->
 <div class="container" id="loginDiv">
 <h1>Login</h1>
 <input type="text" id="loginUser" placeholder="Enter username">
 <button onclick="login()">Login</button>
 </div>
 
+<!-- Home -->
 <div class="container hidden" id="homeDiv">
 <h1>Welcome <span id="uname"></span></h1>
+<div id="announcements"></div>
 <button onclick="showSensi()">SENSI</button>
 <button onclick="showRequests()">REQUESTS</button>
 </div>
 
+<!-- SENSI -->
 <div class="container hidden" id="sensiDiv">
 <h2>Select Company & Model</h2>
 <select id="companySelect" onchange="renderModels()"></select><br><br>
@@ -48,12 +58,14 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 <button onclick="backHome()">Back</button>
 </div>
 
+<!-- Requests -->
 <div class="container hidden" id="requestsDiv">
 <h2>My Requests</h2>
 <div id="reqList">No requests yet</div>
 <button onclick="backHome()">Back</button>
 </div>
 
+<!-- Cart -->
 <div class="container hidden" id="cartDiv">
 <h2>Cart</h2>
 <div id="cartList">Cart is empty</div>
@@ -61,8 +73,9 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 <button onclick="backHome()">Back</button>
 </div>
 
+<!-- Buy Now / Form -->
 <div class="container hidden" id="buyFormDiv">
-<h2>Buy Now / Fill Form</h2>
+<h2>Buy Now - Fill Form</h2>
 <input type="text" id="buyName" placeholder="First Name"><br><br>
 <input type="text" id="buyLast" placeholder="Last Name"><br><br>
 <input type="text" id="buyUID" placeholder="In-Game UID"><br><br>
@@ -70,6 +83,7 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 <button onclick="backHome()">Cancel</button>
 </div>
 
+<!-- Developer Panel -->
 <div class="container hidden" id="devDiv">
 <h2>Developer Panel</h2>
 <h3>Requests</h3>
@@ -80,23 +94,26 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 </div>
 
 <script>
-// Phone data
+// Splash
+setTimeout(()=>{document.getElementById('splash').style.display='none';},2000);
+
+// Data
 const COMPANIES={
-"Xiaomi":["Redmi Note 13 Pro 📱","Redmi Note 13 Pro+ 🔥","Mi 12 🌀","Mi 11 ⚡","Poco X6 Pro 🎯"],
-"iPhone":["iPhone 16e 🍏","iPhone 15 Pro 🌟","iPhone 15","iPhone 14 Pro","iPhone 14"],
-"Samsung":["Galaxy S24 Ultra 💎","Galaxy S23 Ultra","Galaxy S23+","Galaxy S23","Galaxy A54"],
-"Realme":["Realme GT Neo 6 SE 🚀","Realme Narzo 60X","Realme 11 Pro"],
-"Vivo":["Vivo V27 Pro 🌈","Vivo V25","Vivo X90"],
-"Oppo":["Oppo Reno 11 💠","Oppo Find X6","Oppo A77"],
-"OnePlus":["OnePlus 12 ⚡","OnePlus Nord 3 🌟","OnePlus 11"],
-"Infinix":["Infinix Zero Ultra 🔹","Infinix Note 30"],
-"Tecno":["Tecno Phantom X 🔥","Tecno Camon 20"],
-"Huawei":["Huawei P60 Pro 🌌","Huawei Mate 50"],
-"Asus ROG Phone":["ROG Phone 7 ⚡","ROG Phone 6D"],
-"Nothing":["Nothing 3a 🛸","Nothing 2 💫"]
+"Xiaomi":["Redmi Note 13 Pro 📱","Redmi Note 13 Pro+ 🔥","Mi 12 🌀","Mi 11 ⚡","Poco X6 Pro 🎯","Redmi 13c","Mi 13 Ultra","Poco F5 GT","Redmi 12","Redmi 12x","Redmi Note 12 Turbo","Redmi 11T","Redmi 10X","Poco X5 Pro","Mi 10T","Mi 9T Pro","Redmi K60","Mi MIX 4","Poco M5","Redmi Note 11 Pro"],
+"iPhone":["iPhone 16e 🍏","iPhone 15 Pro 🌟","iPhone 15","iPhone 14 Pro","iPhone 14","iPhone 13 Pro","iPhone 13","iPhone 12 Pro","iPhone 12","iPhone 11 Pro","iPhone 11","iPhone SE 3","iPad Pro 12.9","iPad Air 5","iPad Mini 6","iPhone XS","iPhone XR","iPhone X","iPhone 8","iPhone 8 Plus"],
+"Samsung":["Galaxy S24 Ultra 💎","Galaxy S23 Ultra","Galaxy S23+","Galaxy S23","Galaxy A54","Galaxy A34","Galaxy Z Fold5","Galaxy Z Flip5","Galaxy Note20 Ultra","Galaxy Note10+","Galaxy Tab S8","Galaxy Tab S7","Galaxy A14","Galaxy M14","Galaxy M33","Galaxy S22 Ultra","Galaxy S21 FE","Galaxy S20","Galaxy A13","Galaxy A12"],
+"Realme":["Realme GT Neo 6 SE 🚀","Realme Narzo 60X","Realme 11 Pro","Realme 10","Realme 9 Pro+","Realme 8 Pro","Realme 7i","Realme C55","Realme C31","Realme Narzo 50A","Realme Narzo 30A","Realme X7 Max","Realme X50 Pro","Realme 6 Pro","Realme 5 Pro","Realme 3 Pro","Realme 2 Pro","Realme GT Master","Realme C25","Realme C21Y"],
+"Vivo":["Vivo V27 Pro 🌈","Vivo V25","Vivo X90","Vivo X80 Pro","Vivo Y100","Vivo Y22s","Vivo Y16","Vivo Y33s","Vivo V21","Vivo V21e","Vivo X70 Pro","Vivo X60","Vivo S1 Pro","Vivo S7t","Vivo V20","Vivo V19","Vivo X50","Vivo Y20s","Vivo Y12s","Vivo Y15s"],
+"Oppo":["Oppo Reno 11 💠","Oppo Find X6","Oppo A77","Oppo F21 Pro","Oppo A17","Oppo Reno 10","Oppo F19 Pro","Oppo A16","Oppo Find X5 Pro","Oppo A54","Oppo A53","Oppo F15","Oppo A12","Oppo A31","Oppo A15s","Oppo A95","Oppo F11","Oppo A92","Oppo A91","Oppo F9"],
+"OnePlus":["OnePlus 12 ⚡","OnePlus Nord 3 🌟","OnePlus 11","OnePlus 10T","OnePlus 10 Pro","OnePlus 9 Pro","OnePlus 9","OnePlus 8T","OnePlus 8 Pro","OnePlus 8","OnePlus 7T","OnePlus 7 Pro","OnePlus 7","OnePlus 6T","OnePlus 6","OnePlus Nord CE 2","OnePlus Nord 2","OnePlus Nord","OnePlus 5T","OnePlus 5"],
+"Infinix":["Infinix Zero Ultra 🔹","Infinix Note 30","Infinix Hot 20","Infinix Hot 12","Infinix Zero 5G","Infinix Zero 8","Infinix Note 12","Infinix Note 12i","Infinix Note 11","Infinix Hot 11","Infinix Smart 6","Infinix Smart 5","Infinix Hot 10","Infinix Note 10 Pro","Infinix Zero X","Infinix Hot 9","Infinix Note 9","Infinix Hot 8","Infinix Hot 7","Infinix Note 7"],
+"Tecno":["Tecno Phantom X 🔥","Tecno Camon 20","Tecno Camon 19","Tecno Camon 18","Tecno Spark 10","Tecno Spark 9","Tecno Spark 8","Tecno Pova 5","Tecno Pova 3","Tecno Pova 2","Tecno Spark 7","Tecno Spark 6","Tecno Camon 17","Tecno Camon 16","Tecno Camon 15","Tecno Phantom X Pro","Tecno Phantom 12","Tecno Phantom 11","Tecno Spark 5","Tecno Spark 4"],
+"Huawei":["Huawei P60 Pro 🌌","Huawei Mate 50","Huawei Mate 40 Pro","Huawei P50 Pro","Huawei Mate 30 Pro","Huawei P40 Pro","Huawei Nova 10","Huawei Nova 9","Huawei Y9a","Huawei Y7a","Huawei P Smart 2021","Huawei MatePad 11","Huawei MediaPad T5","Huawei MatePad Pro","Huawei P30 Pro","Huawei P20 Pro","Huawei Mate 20 Pro","Huawei Mate 10 Pro","Huawei Y6p","Huawei Y5p"],
+"Asus ROG Phone":["ROG Phone 7 ⚡","ROG Phone 6D","ROG Phone 6","ROG Phone 5","ROG Phone 3","ROG Phone 2","ROG Phone 1","ROG Phone 2 Pro","ROG Phone 5 Ultimate","ROG Phone 5s","ROG Phone 6 Pro","ROG Phone 6 Ultimate","ROG Phone 7 Ultimate","ROG Phone 7 Pro","ROG Phone 3s","ROG Phone 2s","ROG Phone 1 Pro","ROG Phone Max","ROG Phone Turbo","ROG Phone GT"],
+"Nothing":["Nothing 3a 🛸","Nothing 2 💫","Nothing 1","Nothing 3","Nothing Phone 2","Nothing Phone 1","Nothing 5G","Nothing X","Nothing Nova","Nothing Max","Nothing Plus","Nothing Lite","Nothing Ultra","Nothing X Pro","Nothing X Plus","Nothing SE","Nothing 4G","Nothing 3 Pro","Nothing 3 Lite","Nothing Mini"]
 };
 
-// LocalStorage keys
+// LocalStorage
 const LS_REQ='ff_req';
 const LS_ANN='ff_ann';
 let cart=[];
@@ -135,8 +152,8 @@ function afterLogin(){
   document.getElementById('homeDiv').classList.remove('hidden');
   document.getElementById('headerUser').innerText=currentUser.username;
   document.getElementById('logoutBtn').classList.remove('hidden');
-  if(currentUser.role==='user'){document.getElementById('cartBtn').classList.remove('hidden'); renderRequests();}
-  if(currentUser.role==='dev'){document.getElementById('devDiv').classList.remove('hidden'); renderDevRequests(); showAnnouncements();}
+  if(currentUser.role==='user'){document.getElementById('cartBtn').classList.remove('hidden'); renderRequests(); showAnnouncements();}
+  if(currentUser.role==='dev'){document.getElementById('devDiv').classList.remove('hidden'); renderDevRequests();}
 }
 
 // Logout
@@ -173,71 +190,4 @@ function backHome(){
 
 // Cart
 function addToCart(comp,model){cart.push({company:comp,model:model}); alert(model+' added to cart');}
-function openCart(){document.getElementById('homeDiv').classList.add('hidden'); document.getElementById('cartDiv').classList.remove('hidden'); renderCart();}
-function renderCart(){
-  let cl=document.getElementById('cartList'); cl.innerHTML='';
-  if(cart.length===0){cl.innerText='Cart is empty'; return;}
-  cart.forEach((c,i)=>{ let d=document.createElement('div'); d.className='card'; d.innerText=`${c.company} - ${c.model}`; cl.appendChild(d); });
-}
-function cartContinue(){if(cart.length===0){alert('Cart is empty'); return;} document.getElementById('cartDiv').classList.add('hidden'); document.getElementById('buyFormDiv').classList.remove('hidden'); currentBuyItem=null;}
-
-// Buy Now
-function buyNow(comp,model){currentBuyItem={company:comp,model:model}; document.getElementById('sensiDiv').classList.add('hidden'); document.getElementById('buyFormDiv').classList.remove('hidden');}
-
-// Send request
-function sendBuyRequest(){
-  let fname=document.getElementById('buyName').value.trim();
-  let lname=document.getElementById('buyLast').value.trim();
-  let uid=document.getElementById('buyUID').value.trim();
-  if(!fname||!lname||!uid){alert('Fill all fields'); return;}
-  let reqs=lsGet(LS_REQ,[]);
-  if(currentBuyItem){reqs.unshift({id:Date.now()+Math.random(),user:currentUser.username,company:currentBuyItem.company,model:currentBuyItem.model,status:'pending',form:{fname,lname,uid}}); currentBuyItem=null;}
-  else {cart.forEach(item=>{reqs.unshift({id:Date.now()+Math.random(),user:currentUser.username,company:item.company,model:item.model,status:'pending',form:{fname,lname,uid}});}); cart=[];}
-  lsSet(LS_REQ,reqs); alert('Request sent successfully!');
-  document.getElementById('buyName').value=''; document.getElementById('buyLast').value=''; document.getElementById('buyUID').value='';
-  backHome(); renderRequests(); renderDevRequests();
-}
-
-// Requests user
-function renderRequests(){
-  if(!currentUser||currentUser.role!=='user') return;
-  let reqs=lsGet(LS_REQ,[]).filter(r=>r.user===currentUser.username);
-  let rl=document.getElementById('reqList'); rl.innerHTML='';
-  if(reqs.length===0){rl.innerText='No requests yet'; return;}
-  reqs.forEach(r=>{let d=document.createElement('div'); d.className='card'; let sensi=''; if(r.status==='accepted'){sensi=generateSensi(r.model);} d.innerHTML=`${r.company} - ${r.model} <br>Status: ${r.status.toUpperCase()} ${sensi}`; rl.appendChild(d); });
-}
-
-// Sensitivity
-function generateSensi(model){
-  const sensiValues={"Redmi Note 13 Pro 📱":{General:95,RedDot:88,TwoX:80,FourX:75,Sniper:65,FreeLook:90}};
-  let s=sensiValues[model]||{General:90,RedDot:85,TwoX:78,FourX:70,Sniper:60,FreeLook:85};
-  return `<br><pre>🔥 FF MAX PRO SENSITIVITY\n📱 Device: ${model}\nGeneral: ${s.General}\nRed Dot: ${s.RedDot}\n2X Scope: ${s.TwoX}\n4X Scope: ${s.FourX}\nSniper: ${s.Sniper}\nFree Look: ${s.FreeLook}</pre>`;
-}
-
-// Developer panel
-function renderDevRequests(){
-  if(!currentUser||currentUser.role!=='dev') return;
-  let reqs=lsGet(LS_REQ,[]);
-  let devrl=document.getElementById('devReqList'); devrl.innerHTML='';
-  if(reqs.length===0){devrl.innerText='No requests'; return;}
-  reqs.forEach((r,idx)=>{
-    let d=document.createElement('div'); d.className='card';
-    d.innerHTML=`${r.user} - ${r.company} ${r.model}<br>
-    <button onclick="acceptReq(${idx})">Accept</button>
-    <button onclick="rejectReq(${idx})">Reject</button>`;
-    devrl.appendChild(d);
-  });
-}
-function acceptReq(idx){let reqs=lsGet(LS_REQ,[]); reqs[idx].status='accepted'; lsSet(LS_REQ,reqs); renderDevRequests(); renderRequests();}
-function rejectReq(idx){let reqs=lsGet(LS_REQ,[]); reqs[idx].status='declined'; lsSet(LS_REQ,reqs); renderDevRequests(); renderRequests();}
-
-// Announcements
-function sendAnnouncement(){let text=document.getElementById('announcementText').value.trim(); if(!text){alert('Enter message'); return;} let anns=lsGet(LS_ANN,[]); anns.unshift({message:text,date:new Date().toLocaleString()}); lsSet(LS_ANN,anns); alert('Announcement sent'); document.getElementById('announcementText').value=''; showAnnouncements();}
-function showAnnouncements(){if(currentUser.role!=='user') return; let anns=lsGet(LS_ANN,[]); let container=document.createElement('div'); anns.forEach(a=>{let d=document.createElement('div'); d.className='card'; d.innerHTML=`📢 ${a.message}<br><small>${a.date}</small>`; container.appendChild(d);}); document.getElementById('homeDiv').appendChild(container);}
-
-// Contact
-document.write('<div class="container"><h3>Contact: <a href="mailto:as7027506@gmail.com" style="color:red;">as7027506@gmail.com</a></h3></div>');
-
-</script>
-</body>
-</html>
+function openCart(){document.getElementById('homeDiv').classList.add('hidden'); document.getElementById
