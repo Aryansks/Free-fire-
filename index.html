@@ -3,21 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FF Max Sensi</title>
+<title>🔥 Free Fire Sensi Hub</title>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#000;color:#fff;}
-header{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#0a0a0a;border-bottom:3px solid red;position:sticky;top:0;}
-button{padding:10px 20px;margin:5px;font-size:16px;background:red;color:#fff;border:none;border-radius:8px;cursor:pointer;transition:0.2s;}
-button:hover{background:#ff1a1a;transform:scale(1.05);}
+body{margin:0;font-family:Arial,sans-serif;background:#0b0f1a;color:#fff;}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#0a0a0a;border-bottom:3px solid #1a73e8;position:sticky;top:0;z-index:100;}
+button{padding:10px 20px;margin:5px;font-size:16px;background:#1a73e8;color:#fff;border:none;border-radius:8px;cursor:pointer;transition:0.2s;}
+button:hover{background:#4da1ff;transform:scale(1.05);}
 .hidden{display:none;}
 .container{padding:20px;}
-h1,h2,h3{color:red;}
+h1,h2,h3{color:#1a73e8;}
 .card{background:#111;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #222;transition:0.2s;}
 .card:hover{background:#1a1a1a;}
 .scrollable{max-height:200px;overflow-y:auto;padding-right:5px;}
 .req-pending{color:yellow;}
 .req-accepted{color:limegreen;}
 .req-declined{color:red;}
+input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;border:none;background:#222;color:#fff;}
 </style>
 </head>
 <body>
@@ -30,8 +31,14 @@ h1,h2,h3{color:red;}
 </div>
 </header>
 
+<!-- Welcome Screen -->
+<div class="container" id="welcomeDiv">
+<h1>🔥 Free Fire Sensi Hub</h1>
+<button onclick="showLogin()">LOGIN</button>
+</div>
+
 <!-- Login -->
-<div class="container" id="loginDiv">
+<div class="container hidden" id="loginDiv">
 <h1>Login</h1>
 <input type="text" id="loginUser" placeholder="Enter username">
 <button id="loginBtn">Login</button>
@@ -60,9 +67,17 @@ h1,h2,h3{color:red;}
 <button onclick="backHome()">Back</button>
 </div>
 
-<!-- Buy Form -->
+<!-- Cart -->
+<div class="container hidden" id="cartDiv">
+<h2>🛒 My Cart</h2>
+<div id="cartItems" class="scrollable">No items in cart</div>
+<button onclick="continueCart()">Continue</button>
+<button onclick="backHome()">Back</button>
+</div>
+
+<!-- Buy Form (from Continue or Buy Now) -->
 <div class="container hidden" id="buyFormDiv">
-<h2>Buy Now - Fill Form</h2>
+<h2>Fill Form</h2>
 <input type="text" id="buyName" placeholder="First Name"><br>
 <input type="text" id="buyLast" placeholder="Last Name"><br>
 <input type="text" id="buyUID" placeholder="In-Game UID"><br>
@@ -73,6 +88,7 @@ h1,h2,h3{color:red;}
 <!-- Developer Panel -->
 <div class="container hidden" id="devDiv">
 <h2>Developer Panel</h2>
+<button onclick="logout()">Logout</button>
 <h3>User Requests</h3>
 <div id="devReqList" class="scrollable">No requests yet</div>
 <h3>Manage Announcements</h3>
@@ -86,6 +102,7 @@ h1,h2,h3{color:red;}
 let currentUser=null;
 let requests=JSON.parse(localStorage.getItem('requests'))||[];
 let announcements=JSON.parse(localStorage.getItem('announcements'))||[];
+let cart=[];
 
 const COMPANIES={
 "Xiaomi":["Redmi Note 13 Pro 📱","Redmi Note 13 Pro+ 🔥","Mi 12 🌀","Mi 11 ⚡","Poco X6 Pro 🎯","Redmi 12C","Redmi 11 Prime","Redmi K60 Ultra"],
@@ -103,24 +120,28 @@ const COMPANIES={
 };
 
 // ------------------- Login -------------------
-window.onload = function() {
-const loginBtn=document.getElementById('loginBtn');
-loginBtn.addEventListener('click', function(){
-    const uname=document.getElementById('loginUser').value.trim();
-    if(!uname){alert('Enter username'); return;}
-    if(uname.toUpperCase()==='DEV999'){
-        const code=prompt('Enter developer password:');
-        if(code!=='NEWPASS999'){alert('Wrong developer password'); return;}
-        currentUser={name:'DEV999',dev:true};
-    } else {
-        currentUser={name:uname,dev:false};
-    }
-    localStorage.setItem('user',JSON.stringify(currentUser));
-    afterLogin();
-});
+function showLogin(){
+    document.getElementById('welcomeDiv').classList.add('hidden');
+    document.getElementById('loginDiv').classList.remove('hidden');
+}
 
-const user=JSON.parse(localStorage.getItem('user'));
-if(user){currentUser=user; afterLogin();}
+window.onload = function(){
+    const loginBtn=document.getElementById('loginBtn');
+    loginBtn.addEventListener('click',function(){
+        const uname=document.getElementById('loginUser').value.trim();
+        if(!uname){alert('Enter username'); return;}
+        if(uname.toUpperCase()==='DEV999'){
+            const code=prompt('Enter developer password:');
+            if(code!=='999'){alert('Wrong developer password'); return;}
+            currentUser={name:'DEV999',dev:true};
+        } else {
+            currentUser={name:uname,dev:false};
+        }
+        localStorage.setItem('user',JSON.stringify(currentUser));
+        afterLogin();
+    });
+    const user=JSON.parse(localStorage.getItem('user'));
+    if(user){currentUser=user; afterLogin();}
 };
 
 // ------------------- Functions -------------------
@@ -128,6 +149,7 @@ function afterLogin(){
     document.getElementById('loginDiv').classList.add('hidden');
     document.getElementById('homeDiv').classList.remove('hidden');
     document.getElementById('logoutBtn').classList.remove('hidden');
+    document.getElementById('cartBtn').classList.remove('hidden');
     document.getElementById('uname').innerText=currentUser.name;
     document.getElementById('headerUser').innerText=currentUser.dev?'Developer':'User';
     populateAnnouncements();
@@ -147,7 +169,21 @@ function afterLogin(){
 
 function logout(){localStorage.removeItem('user'); location.reload();}
 
-// ------------------- Companies & Models -------------------
+function backHome(){
+    ['sensiDiv','requestsDiv','buyFormDiv','cartDiv'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+    document.getElementById('homeDiv').classList.remove('hidden');
+}
+
+function showSensi(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('sensiDiv').classList.remove('hidden');
+}
+
+function showRequests(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('requestsDiv').classList.remove('hidden');
+}
+
 function populateCompanies(){
     const select=document.getElementById('companySelect');
     select.innerHTML='<option value="">--Select Company--</option>';
@@ -163,10 +199,15 @@ function renderModels(){
     modelList.innerHTML='';
     if(!company) return;
     COMPANIES[company].forEach(model=>{
-        const btn=document.createElement('button');
-        btn.innerText=model+' - BUY NOW';
-        btn.onclick=()=>buyNow(model,company);
-        modelList.appendChild(btn);
+        const div=document.createElement('div'); div.style.margin='5px 0';
+        const buyBtn=document.createElement('button');
+        buyBtn.innerText=model+' - BUY NOW';
+        buyBtn.onclick=()=>buyNow(model,company);
+        const cartBtn=document.createElement('button');
+        cartBtn.innerText=model+' - ADD TO CART';
+        cartBtn.onclick=()=>addToCart(model,company);
+        div.appendChild(buyBtn); div.appendChild(cartBtn);
+        modelList.appendChild(div);
     });
 }
 
@@ -177,24 +218,49 @@ function buyNow(model,company){
     document.getElementById('buyFormDiv').dataset.company=company;
 }
 
-// ------------------- Buy Request -------------------
+function addToCart(model,company){
+    cart.push({model,company});
+    alert('Added to cart!');
+}
+
+function openCart(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('cartDiv').classList.remove('hidden');
+    const div=document.getElementById('cartItems'); div.innerHTML='';
+    if(cart.length===0){div.innerText='No items in cart'; return;}
+    cart.forEach((item,i)=>{
+        const d=document.createElement('div'); d.className='card';
+        d.innerHTML=`${item.company} - ${item.model} <button onclick="removeCart(${i})">Remove</button>`;
+        div.appendChild(d);
+    });
+}
+
+function removeCart(index){cart.splice(index,1); openCart();}
+
+function continueCart(){
+    if(cart.length===0){alert('Cart is empty'); return;}
+    document.getElementById('cartDiv').classList.add('hidden');
+    document.getElementById('buyFormDiv').classList.remove('hidden');
+}
+
 function sendBuyRequest(){
     const fname=document.getElementById('buyName').value.trim();
     const lname=document.getElementById('buyLast').value.trim();
     const uid=document.getElementById('buyUID').value.trim();
-    const model=document.getElementById('buyFormDiv').dataset.model;
-    const company=document.getElementById('buyFormDiv').dataset.company;
-    if(!fname || !lname || !uid){alert('Fill all fields'); return;}
-    const req={user:currentUser.name,company,model,uid,status:'Pending',sensitivity:null};
+    const model=document.getElementById('buyFormDiv').dataset.model||cart.map(c=>c.model).join(', ');
+    const company=document.getElementById('buyFormDiv').dataset.company||cart.map(c=>c.company).join(', ');
+    if(!fname||!lname||!uid){alert('Fill all fields'); return;}
+    const sensi=randomSensi();
+    const req={user:currentUser.name,company,model,uid,status:'Pending',sensitivity:sensi};
     requests.push(req);
     localStorage.setItem('requests',JSON.stringify(requests));
     populateRequests();
     populateDevRequests();
+    cart=[]; // clear cart
     alert('Request sent!');
     backHome();
 }
 
-// ------------------- Populate Requests -------------------
 function populateRequests(){
     const div=document.getElementById('reqList'); div.innerHTML='';
     const userReq=requests.filter(r=>r.user===currentUser.name);
@@ -203,7 +269,7 @@ function populateRequests(){
         const d=document.createElement('div'); d.className='card';
         let sensiText='';
         if(r.status==='Accepted' && r.sensitivity){
-            sensiText = `<br>⚙️ Sensitivity Setup:<br>
+            sensiText = `<br>⚙️ Sensitivity:<br>
             General: ${r.sensitivity.general}<br>
             Red Dot: ${r.sensitivity.redDot}<br>
             2x Scope: ${r.sensitivity.twoX}<br>
@@ -216,14 +282,13 @@ function populateRequests(){
     });
 }
 
-// ------------------- Announcements -------------------
 function populateAnnouncements(){
     const div=document.getElementById('announcements');
     div.innerHTML='';
     if(announcements.length===0){div.innerText='No announcements'; return;}
     announcements.forEach((a,i)=>{
         const d=document.createElement('div'); d.className='card';
-        d.innerHTML=`📢 ${a} ${currentUser.dev ? '<button onclick="deleteAnnouncement('+i+')">Delete</button>':''}`;
+        d.innerHTML=`📢 ${a}${currentUser.dev?'<button onclick="deleteAnnouncement('+i+')">Delete</button>':''}`;
         div.appendChild(d);
     });
 }
@@ -245,7 +310,6 @@ function deleteAnnouncement(index){
     }
 }
 
-// ------------------- Developer Requests -------------------
 function populateDevRequests(){
     const div=document.getElementById('devReqList');
     div.innerHTML='';
@@ -260,8 +324,22 @@ function populateDevRequests(){
     });
 }
 
+function acceptRequest(index){
+    requests[index].status='Accepted';
+    localStorage.setItem('requests',JSON.stringify(requests));
+    populateRequests(); populateDevRequests();
+}
+
+function declineRequest(index){
+    requests[index].status='Declined';
+    localStorage.setItem('requests',JSON.stringify(requests));
+    populateRequests(); populateDevRequests();
+}
+
 function randomSensi(){
-    return {
-        general: Math.floor(Math.random()*191)+10,
-        redDot: Math.floor(Math.random()*191)+10,
-        twoX: Math.floor(Math.random()*191)+10
+    return {general:getRandom(),redDot:getRandom(),twoX:getRandom(),threeX:getRandom(),fourX:getRandom(),awm:getRandom()};
+}
+function getRandom(){return Math.floor(Math.random()*191)+10;}
+</script>
+</body>
+</html>
