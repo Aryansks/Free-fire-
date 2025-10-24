@@ -100,18 +100,7 @@ const COMPANIES={
 "Xiaomi":["Redmi Note 13 Pro 📱","Redmi Note 13 Pro+ 🔥","Mi 12 🌀","Mi 11 ⚡","Poco X6 Pro 🎯","Redmi 12C","Redmi 11 Prime","Redmi K60 Ultra"],
 "iPhone":["iPhone 16e 🍏","iPhone 15 Pro 🌟","iPhone 15","iPhone 14 Pro","iPhone 14","iPhone 13","iPhone 12 Mini","iPhone SE 3"],
 "Samsung":["Galaxy S24 Ultra 💎","Galaxy S23 Ultra","Galaxy S23+","Galaxy S23","Galaxy A54","Galaxy A14","Galaxy Z Fold5","Galaxy Z Flip5"],
-"Nothing":["Nothing Phone 1 🔵","Nothing Phone 1T 🌟","Nothing Phone 2 🟡","Nothing Phone 2T ⚡","Nothing Phone 3 Pro 🌀","Nothing Phone 3a 🌟","Nothing Phone 4 🟢","Nothing Phone 4a 🔴"],
-"Oppo":["Oppo Reno 10 Pro","Oppo F23","Oppo A77","Oppo Find X6"],
-"Realme":["Realme GT3","Realme 12 Pro","Realme 11i","Realme Narzo 60x"],
-"Vivo":["Vivo X100 Pro","Vivo V29","Vivo Y36","Vivo Y22"],
-"OnePlus":["OnePlus 12","OnePlus 11R","OnePlus Nord 3","OnePlus 10T"],
-"Huawei":["Huawei P60 Pro","Huawei Mate 60","Huawei Nova 12","Huawei Y9a"],
-"Motorola":["Moto Edge 40","Moto G73","Moto G72","Moto X40"],
-"LG":["LG Velvet 2","LG Wing 5G","LG V70","LG K62"],
-"Nokia":["Nokia X30","Nokia G60","Nokia 5710","Nokia XR20"],
-"Sony":["Sony Xperia 1 V","Sony Xperia 5 IV","Sony Xperia 10 IV","Sony Xperia L4"],
-"Asus":["Asus ROG Phone 7","Asus Zenfone 10","Asus Zenfone 9","Asus ROG Phone 6"],
-"Honor":["Honor Magic 5","Honor 90","Honor X9a","Honor 80"]
+"Nothing":["Nothing Phone 1 🔵","Nothing Phone 1T 🌟","Nothing Phone 2 🟡","Nothing Phone 2T ⚡","Nothing Phone 3 Pro 🌀","Nothing Phone 3a 🌟","Nothing Phone 4 🟢","Nothing Phone 4a 🔴"]
 };
 
 // --- Login & One-time login ---
@@ -155,18 +144,161 @@ function afterLogin(){
     }
 }
 
-// --- Helper functions ---
+// --- Logout ---
 function logout(){ localStorage.removeItem('user'); location.reload(); }
+
+// --- Navigation ---
 function showLogin(){document.getElementById('welcomeDiv').classList.add('hidden');document.getElementById('loginDiv').classList.remove('hidden');}
 function backHome(){['sensiDiv','requestsDiv','buyFormDiv','cartDiv'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('homeDiv').classList.remove('hidden');}
 function showSensi(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('sensiDiv').classList.remove('hidden');}
 function showRequests(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('requestsDiv').classList.remove('hidden');}
+
+// --- Populate Companies ---
 function populateCompanies(){
     const select=document.getElementById('companySelect');
     select.innerHTML='<option value="">--Select Company--</option>';
     Object.keys(COMPANIES).forEach(c=>{
         const opt=document.createElement('option'); opt.value=c; opt.innerText=c; select.appendChild(opt);
     });
+}
+
+// --- Render Models ---
+function renderModels(){
+    const company=document.getElementById('companySelect').value;
+    const listDiv=document.getElementById('modelList');
+    listDiv.innerHTML='';
+    if(!company) return;
+    COMPANIES[company].forEach(model=>{
+        const btnBuy=document.createElement('button');
+        btnBuy.innerText='Buy Now';
+        btnBuy.onclick=function(){ openBuyForm(company,model); };
+        const btnCart=document.createElement('button');
+        btnCart.innerText='Add to Cart';
+        btnCart.onclick=function(){ addToCart(company,model); };
+        const div=document.createElement('div');
+        div.className='model-buttons';
+        div.innerHTML=`<span>${model}</span>`;
+        div.appendChild(btnBuy);
+        div.appendChild(btnCart);
+        listDiv.appendChild(div);
+    });
+}
+
+// --- Buy Now Form ---
+let currentBuyItem=null;
+function openBuyForm(company,model){
+    currentBuyItem={company,model};
+    document.getElementById('sensiDiv').classList.add('hidden');
+    document.getElementById('buyFormDiv').classList.remove('hidden');
+}
+function sendBuyRequest(){
+    const f=document.getElementById('buyName').value.trim();
+    const l=document.getElementById('buyLast').value.trim();
+    const uid=document.getElementById('buyUID').value.trim();
+    if(!f || !l || !uid){alert('Fill all fields'); return;}
+    const sensi=Math.floor(Math.random()*191)+10; // 10-200
+    const req={user:currentUser.name,item:currentBuyItem,sensi:sensi,status:'Pending',fname:f,lname:l,uid:uid};
+    requests.push(req); localStorage.setItem('requests',JSON.stringify(requests));
+    alert('Request sent!');
+    document.getElementById('buyFormDiv').classList.add('hidden');
+    backHome();
+    populateRequests();
+    populateDevRequests();
+}
+
+// --- Cart ---
+function addToCart(company,model){
+    cart.push({company,model});
+    alert('Added to cart');
+}
+function openCart(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('cartDiv').classList.remove('hidden');
+    const div=document.getElementById('cartItems'); div.innerHTML='';
+    if(cart.length===0){ div.innerText='No items in cart'; return;}
+    cart.forEach((c,i)=>{
+        const d=document.createElement('div'); d.innerText=`${c.company} - ${c.model}`;
+        div.appendChild(d);
+    });
+}
+function continueCart(){
+    if(cart.length===0){ alert('Cart empty'); return;}
+    document.getElementById('cartDiv').classList.add('hidden');
+    document.getElementById('buyFormDiv').classList.remove('hidden');
+}
+
+// --- User Requests ---
+function populateRequests(){
+    if(currentUser.dev) return;
+    const div=document.getElementById('reqList');
+    const userReq=requests.filter(r=>r.user===currentUser.name);
+    if(userReq.length===0){ div.innerText='No requests yet'; return;}
+    div.innerHTML='';
+    userReq.forEach(r=>{
+        const d=document.createElement('div');
+        d.className='card';
+        d.innerHTML=`${r.item.company} - ${r.item.model} | Status: <span class="req-${r.status.toLowerCase()}">${r.status}</span> | SENSI: ${r.status==='Accepted'?r.sensi:''}`;
+        div.appendChild(d);
+    });
+}
+
+// --- Developer Requests ---
+function populateDevRequests(){
+    if(!currentUser.dev) return;
+    const div=document.getElementById('devReqList');
+    const pending=requests.filter(r=>r.status==='Pending');
+    if(pending.length===0){ div.innerText='No requests'; return;}
+    div.innerHTML='';
+    pending.forEach((r,i)=>{
+        const d=document.createElement('div');
+        d.className='card';
+        d.innerHTML=`${r.user} | ${r.item.company} - ${r.item.model} <button onclick="acceptRequest(${i})">Accept</button> <button onclick="declineRequest(${i})">Decline</button>`;
+        div.appendChild(d);
+    });
+}
+function acceptRequest(index){
+    const pending=requests.filter(r=>r.status==='Pending');
+    const realIndex=requests.indexOf(pending[index]);
+    requests[realIndex].status='Accepted';
+    localStorage.setItem('requests',JSON.stringify(requests));
+    populateDevRequests();
+    populateRequests();
+}
+function declineRequest(index){
+    const pending=requests.filter(r=>r.status==='Pending');
+    const realIndex=requests.indexOf(pending[index]);
+    requests[realIndex].status='Declined';
+    localStorage.setItem('requests',JSON.stringify(requests));
+    populateDevRequests();
+    populateRequests();
+}
+
+// --- Announcements ---
+function populateAnnouncements(){
+    if(currentUser.dev) return;
+    const div=document.getElementById('announcements');
+    div.innerHTML='';
+    if(announcements.length===0){ div.innerText='No announcements'; return;}
+    announcements.forEach(a=>{
+        const d=document.createElement('div'); d.className='card'; d.innerText=a; div.appendChild(d);
+    });
+}
+function sendAnnouncement(){
+    const txt=document.getElementById('announcementText').value.trim();
+    if(!txt) return;
+    announcements.push(txt); localStorage.setItem('announcements',JSON.stringify(announcements));
+    renderDevAnnouncements(); populateAnnouncements();
+    document.getElementById('announcementText').value='';
+}
+function renderDevAnnouncements(){
+    const div=document.getElementById('devAnnList'); div.innerHTML='';
+    announcements.forEach((a,i)=>{
+        const d=document.createElement('div'); d.className='card'; d.innerHTML=`${a} <button onclick="deleteAnnouncement(${i})">Delete</button>`; div.appendChild(d);
+    });
+}
+function deleteAnnouncement(i){
+    announcements.splice(i,1); localStorage.setItem('announcements',JSON.stringify(announcements));
+    renderDevAnnouncements(); populateAnnouncements();
 }
 </script>
 
