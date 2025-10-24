@@ -21,6 +21,7 @@ h1,h2,h3{color:red;}
 </style>
 </head>
 <body>
+
 <header>
 <div id="headerUser">Not logged</div>
 <div>
@@ -29,12 +30,14 @@ h1,h2,h3{color:red;}
 </div>
 </header>
 
+<!-- Login -->
 <div class="container" id="loginDiv">
 <h1>Login</h1>
 <input type="text" id="loginUser" placeholder="Enter username">
 <button id="loginBtn">Login</button>
 </div>
 
+<!-- Home -->
 <div class="container hidden" id="homeDiv">
 <h1>Welcome <span id="uname"></span></h1>
 <div id="announcements" class="scrollable"></div>
@@ -42,6 +45,7 @@ h1,h2,h3{color:red;}
 <button id="requestsBtn" onclick="showRequests()">REQUESTS</button>
 </div>
 
+<!-- SENSI -->
 <div class="container hidden" id="sensiDiv">
 <h2>Select Company & Model</h2>
 <select id="companySelect" onchange="renderModels()"></select>
@@ -49,12 +53,14 @@ h1,h2,h3{color:red;}
 <button onclick="backHome()">Back</button>
 </div>
 
+<!-- Requests -->
 <div class="container hidden" id="requestsDiv">
 <h2>My Requests</h2>
 <div id="reqList" class="scrollable">No requests yet</div>
 <button onclick="backHome()">Back</button>
 </div>
 
+<!-- Buy Form -->
 <div class="container hidden" id="buyFormDiv">
 <h2>Buy Now - Fill Form</h2>
 <input type="text" id="buyName" placeholder="First Name"><br>
@@ -64,6 +70,7 @@ h1,h2,h3{color:red;}
 <button onclick="backHome()">Cancel</button>
 </div>
 
+<!-- Developer Panel -->
 <div class="container hidden" id="devDiv">
 <h2>Developer Panel</h2>
 <h3>User Requests</h3>
@@ -76,6 +83,10 @@ h1,h2,h3{color:red;}
 
 <script>
 // ------------------- Data -------------------
+let currentUser=null;
+let requests=JSON.parse(localStorage.getItem('requests'))||[];
+let announcements=JSON.parse(localStorage.getItem('announcements'))||[];
+
 const COMPANIES={
 "Xiaomi":["Redmi Note 13 Pro 📱","Redmi Note 13 Pro+ 🔥","Mi 12 🌀","Mi 11 ⚡","Poco X6 Pro 🎯","Redmi 12C","Redmi 11 Prime","Redmi K60 Ultra"],
 "iPhone":["iPhone 16e 🍏","iPhone 15 Pro 🌟","iPhone 15","iPhone 14 Pro","iPhone 14","iPhone 13","iPhone 12 Mini","iPhone SE 3"],
@@ -91,12 +102,10 @@ const COMPANIES={
 "Nothing":["Nothing Phone 1 🔵","Nothing Phone 1T 🌟","Nothing Phone 2 🟡","Nothing Phone 2T ⚡","Nothing Phone 3 Pro 🌀","Nothing Phone 3a 🌟","Nothing Phone 4 🟢","Nothing Phone 4a 🔴"]
 };
 
-let currentUser=null;
-let requests=JSON.parse(localStorage.getItem('requests'))||[];
-let announcements=JSON.parse(localStorage.getItem('announcements'))||[];
-
 // ------------------- Login -------------------
-document.getElementById('loginBtn').addEventListener('click', function(){
+window.onload = function() {
+const loginBtn=document.getElementById('loginBtn');
+loginBtn.addEventListener('click', function(){
     const uname=document.getElementById('loginUser').value.trim();
     if(!uname){alert('Enter username'); return;}
     if(uname.toUpperCase()==='DEV999'){
@@ -110,6 +119,11 @@ document.getElementById('loginBtn').addEventListener('click', function(){
     afterLogin();
 });
 
+const user=JSON.parse(localStorage.getItem('user'));
+if(user){currentUser=user; afterLogin();}
+};
+
+// ------------------- Functions -------------------
 function afterLogin(){
     document.getElementById('loginDiv').classList.add('hidden');
     document.getElementById('homeDiv').classList.remove('hidden');
@@ -131,19 +145,14 @@ function afterLogin(){
     }
 }
 
-window.onload=function(){
-    const user=JSON.parse(localStorage.getItem('user'));
-    if(user){currentUser=user; afterLogin();}
-};
-
 function logout(){localStorage.removeItem('user'); location.reload();}
 
-// ------------------- SENSI -------------------
+// ------------------- Companies & Models -------------------
 function populateCompanies(){
     const select=document.getElementById('companySelect');
     select.innerHTML='<option value="">--Select Company--</option>';
     Object.keys(COMPANIES).forEach(c=>{
-        const opt=document.createElement('option'); 
+        const opt=document.createElement('option');
         opt.value=c; opt.innerText=c; select.appendChild(opt);
     });
 }
@@ -168,7 +177,7 @@ function buyNow(model,company){
     document.getElementById('buyFormDiv').dataset.company=company;
 }
 
-// ------------------- Requests -------------------
+// ------------------- Buy Request -------------------
 function sendBuyRequest(){
     const fname=document.getElementById('buyName').value.trim();
     const lname=document.getElementById('buyLast').value.trim();
@@ -236,7 +245,7 @@ function deleteAnnouncement(index){
     }
 }
 
-// ------------------- Developer Panel -------------------
+// ------------------- Developer Requests -------------------
 function populateDevRequests(){
     const div=document.getElementById('devReqList');
     div.innerHTML='';
@@ -244,7 +253,7 @@ function populateDevRequests(){
     if(pending.length===0){div.innerText='No pending requests'; return;}
     pending.forEach((r,i)=>{
         const d=document.createElement('div'); d.className='card';
-        d.innerHTML=`${r.user}: ${r.company} - ${r.model} <br>UID: ${r.uid}<br>
+        d.innerHTML=`${r.user}: ${r.company} - ${r.model} <br>UID: ${r.uid} <br>
         <button onclick="acceptRequest(${i})">Accept</button>
         <button onclick="declineRequest(${i})">Decline</button>`;
         div.appendChild(d);
@@ -255,38 +264,4 @@ function randomSensi(){
     return {
         general: Math.floor(Math.random()*191)+10,
         redDot: Math.floor(Math.random()*191)+10,
-        twoX: Math.floor(Math.random()*191)+10,
-        threeX: Math.floor(Math.random()*191)+10,
-        fourX: Math.floor(Math.random()*191)+10,
-        awm: Math.floor(Math.random()*191)+10
-    };
-}
-
-function acceptRequest(index){
-    const req = requests[index];
-    req.status='Accepted';
-    req.sensitivity = randomSensi();
-    localStorage.setItem('requests',JSON.stringify(requests));
-    populateDevRequests();
-    populateRequests();
-}
-
-function declineRequest(index){
-    const req = requests[index];
-    req.status='Declined';
-    req.sensitivity=null;
-    requests.splice(index,1); // remove immediately from developer panel
-    localStorage.setItem('requests',JSON.stringify(requests));
-    populateDevRequests();
-    populateRequests();
-}
-
-// ------------------- Navigation -------------------
-function backHome(){
-    ['sensiDiv','requestsDiv','buyFormDiv'].forEach(id=>document.getElementById(id).classList.add('hidden'));
-    document.getElementById('homeDiv').classList.remove('hidden');
-}
-
-function showSensi(){
-    document.getElementById('homeDiv').classList.add('hidden');
-    document.getElementById('sensi
+        twoX: Math.floor(Math.random()*191)+10
