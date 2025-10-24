@@ -20,7 +20,6 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 </style>
 </head>
 <body>
-
 <header>
 <div id="headerUser">Not logged</div>
 <div>
@@ -97,9 +96,186 @@ const COMPANIES={
 "Samsung":["Galaxy S24 Ultra 💎","Galaxy S23 Ultra","Galaxy S23+","Galaxy S23","Galaxy A54","Galaxy A34","Galaxy Z Fold5","Galaxy Z Flip5","Galaxy Note20 Ultra","Galaxy Note10+","Galaxy Tab S8","Galaxy Tab S7","Galaxy A14","Galaxy M14","Galaxy M33","Galaxy S22 Ultra","Galaxy S21 FE","Galaxy S20","Galaxy A13","Galaxy A12"],
 "Realme":["Realme GT Neo 6 SE 🚀","Realme Narzo 60X","Realme 11 Pro","Realme 10","Realme 9 Pro+","Realme 8 Pro","Realme 7i","Realme C55","Realme C31","Realme Narzo 50A","Realme Narzo 30A","Realme X7 Max","Realme X50 Pro","Realme 6 Pro","Realme 5 Pro","Realme 3 Pro","Realme 2 Pro","Realme GT Master","Realme C25","Realme C21Y"],
 "Vivo":["Vivo V27 Pro 🌈","Vivo V25","Vivo X90","Vivo X80 Pro","Vivo Y100","Vivo Y22s","Vivo Y16","Vivo Y33s","Vivo V21","Vivo V21e","Vivo X70 Pro","Vivo X60","Vivo S1 Pro","Vivo S7t","Vivo V20","Vivo V19","Vivo X50","Vivo Y20s","Vivo Y12s","Vivo Y15s"],
-"Oppo":["Oppo Reno 11 💠","Oppo Find X6","Oppo A77","Oppo F21 Pro","Oppo A17","Oppo Reno 10","Oppo F19 Pro","Oppo A16","Oppo Find X5 Pro","Oppo A54","Oppo A53","Oppo F15","Oppo A12","Oppo A31","Oppo A15s","Oppo A95","Oppo F11","Oppo A92","Oppo A91","Oppo F9"],
-"OnePlus":["OnePlus 12 ⚡","OnePlus Nord 3 🌟","OnePlus 11","OnePlus 10T","OnePlus 10 Pro","OnePlus 9 Pro","OnePlus 9","OnePlus 8T","OnePlus 8 Pro","OnePlus 8","OnePlus 7T","OnePlus 7 Pro","OnePlus 7","OnePlus 6T","OnePlus 6","OnePlus Nord CE 2","OnePlus Nord 2","OnePlus Nord","OnePlus 5T","OnePlus 5"],
-"Infinix":["Infinix Zero Ultra 🔹","Infinix Note 30","Infinix Hot 20","Infinix Hot 12","Infinix Zero 5G","Infinix Zero 8","Infinix Note 12","Infinix Note 12i","Infinix Note 11","Infinix Hot 11","Infinix Smart 6","Infinix Smart 5","Infinix Hot 10","Infinix Note 10 Pro","Infinix Zero X","Infinix Hot 9","Infinix Note 9","Infinix Hot 8","Infinix Hot 7","Infinix Note 7"],
-"Tecno":["Tecno Phantom X 🔥","Tecno Camon 20","Tecno Camon 19","Tecno Camon 18","Tecno Spark 10","Tecno Spark 9","Tecno Spark 8","Tecno Pova 5","Tecno Pova 3","Tecno Pova 2","Tecno Spark 7","Tecno Spark 6","Tecno Camon 17","Tecno Camon 16","Tecno Camon 15","Tecno Phantom X Pro","Tecno Phantom 12","Tecno Phantom 11","Tecno Spark 5","Tecno Spark 4"],
-"Huawei":["Huawei P60 Pro 🌌","Huawei Mate 50","Huawei Mate 40 Pro","Huawei P50 Pro","Huawei Mate 30 Pro","Huawei P40 Pro","Huawei Nova 10","Huawei Nova 9","Huawei Y9a","Huawei Y7a","Huawei P Smart 2021","Huawei MatePad 11","Huawei MediaPad T5","Huawei MatePad Pro","Huawei P30 Pro","Huawei P20 Pro","Huawei Mate 20 Pro","Huawei Mate 10 Pro","Huawei Y6p","Huawei Y5p"],
-"Asus ROG Phone":["ROG Phone 7 ⚡","ROG Phone 6D","ROG Phone 6","ROG Phone 5","ROG Phone 3","ROG Phone 2","ROG Phone 1","ROG Phone 2 Pro","ROG Phone 5 Ultimate","ROG Phone 5s","ROG Phone 6 Pro","ROG Phone 6 Ultimate","ROG Phone 7 Ultimate","ROG Phone 7 Pro","ROG Phone 3s","ROG Phone 2s","ROG
+"Oppo":["Oppo Reno 11 💠","Oppo Find X6","Oppo A77","Oppo F21 Pro","Oppo A17","Oppo Reno 10","Oppo F19 Pro","Oppo A16","Oppo Find X5 Pro","Oppo A54","Oppo A53","Oppo F15","Oppo A12","Oppo A31","Oppo A15s","Oppo A95","Oppo F11","Oppo A92","Oppo A91","Oppo F9"]
+};
+let currentUser=null;
+let requests=JSON.parse(localStorage.getItem('requests'))||[];
+let announcements=JSON.parse(localStorage.getItem('announcements'))||[];
+let cart=[];
+
+// -------------------------
+// FUNCTIONS
+// -------------------------
+function populateCompanies(){
+  const companySelect=document.getElementById('companySelect');
+  companySelect.innerHTML='<option value="">Select Company</option>';
+  Object.keys(COMPANIES).forEach(c=>{
+    const opt=document.createElement('option');
+    opt.value=c; opt.innerText=c;
+    companySelect.appendChild(opt);
+  });
+}
+function renderModels(){
+  const company=document.getElementById('companySelect').value;
+  const modelList=document.getElementById('modelList');
+  modelList.innerHTML='';
+  if(!company) return;
+  COMPANIES[company].forEach(model=>{
+    const div=document.createElement('div'); div.className='card';
+    div.innerHTML=`${model} <br><button onclick="buyNow('${company}','${model}')">Buy Now</button>`;
+    modelList.appendChild(div);
+  });
+}
+// -------------------------
+// LOGIN & SESSION
+// -------------------------
+function login(){
+    const uname=document.getElementById('loginUser').value.trim();
+    if(!uname){alert('Enter username'); return;}
+    if(uname.toUpperCase()==='DEV999'){
+        const code=prompt('Enter developer code:');
+        if(code!=='DEV999CODE'){alert('Wrong developer code'); return;}
+        currentUser={name:'DEV999',dev:true};
+        localStorage.setItem('user',JSON.stringify(currentUser));
+        afterLogin();
+    }else{
+        currentUser={name:uname,dev:false};
+        localStorage.setItem('user',JSON.stringify(currentUser));
+        afterLogin();
+    }
+}
+function afterLogin(){
+    document.getElementById('loginDiv').classList.add('hidden');
+    document.getElementById('homeDiv').classList.remove('hidden');
+    document.getElementById('logoutBtn').classList.remove('hidden');
+    document.getElementById('cartBtn').classList.remove('hidden');
+    document.getElementById('uname').innerText=currentUser.name;
+    document.getElementById('headerUser').innerText=currentUser.dev?'Developer':'User';
+    populateAnnouncements();
+    populateRequests();
+    populateCompanies();
+    if(currentUser.dev){
+        document.getElementById('devDiv').classList.remove('hidden');
+    }else{
+        document.getElementById('devDiv').classList.add('hidden');
+    }
+}
+
+// Check session on load
+window.onload=function(){
+    const user=JSON.parse(localStorage.getItem('user'));
+    if(user){currentUser=user; afterLogin();}
+};
+
+// LOGOUT
+function logout(){
+    localStorage.removeItem('user');
+    location.reload();
+}
+
+// NAVIGATION
+function backHome(){
+    ['sensiDiv','requestsDiv','buyFormDiv','cartDiv'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+    document.getElementById('homeDiv').classList.remove('hidden');
+}
+
+// SHOW SENSI
+function showSensi(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('sensiDiv').classList.remove('hidden');
+}
+
+// SHOW REQUESTS
+function showRequests(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('requestsDiv').classList.remove('hidden');
+    populateRequests();
+}
+
+// BUY NOW FORM
+let selectedCompany='',selectedModel='';
+function buyNow(company,model){
+    selectedCompany=company;
+    selectedModel=model;
+    document.getElementById('sensiDiv').classList.add('hidden');
+    document.getElementById('buyFormDiv').classList.remove('hidden');
+}
+function sendBuyRequest(){
+    const name=document.getElementById('buyName').value.trim();
+    const last=document.getElementById('buyLast').value.trim();
+    const uid=document.getElementById('buyUID').value.trim();
+    if(!name||!last||!uid){alert('Fill all fields'); return;}
+    const req={user:currentUser.name,company:selectedCompany,model:selectedModel,name:name,last:last,uid:uid,status:'Pending'};
+    requests.push(req);
+    localStorage.setItem('requests',JSON.stringify(requests));
+    alert('Request sent to developer');
+    document.getElementById('buyFormDiv').classList.add('hidden');
+    backHome();
+    populateRequests();
+    populateDevRequests();
+}
+
+// REQUESTS FOR USER
+function populateRequests(){
+    if(currentUser.dev) return;
+    const list=document.getElementById('reqList');
+    const userReqs=requests.filter(r=>r.user===currentUser.name);
+    if(userReqs.length===0){list.innerHTML='No requests yet'; return;}
+    list.innerHTML='';
+    userReqs.forEach(r=>{
+        const div=document.createElement('div'); div.className='card';
+        div.innerHTML=`${r.company} - ${r.model} | Status: ${r.status}`;
+        list.appendChild(div);
+    });
+}
+
+// CART
+function openCart(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('cartDiv').classList.remove('hidden');
+    const cartDiv=document.getElementById('cartList');
+    if(cart.length===0){cartDiv.innerHTML='Cart is empty'; return;}
+    cartDiv.innerHTML='';
+    cart.forEach(c=>{
+        const div=document.createElement('div'); div.className='card';
+        div.innerHTML=`${c.company} - ${c.model}`;
+        cartDiv.appendChild(div);
+    });
+}
+function cartContinue(){alert('Continue to fill form in Buy Now section');}
+
+// DEVELOPER PANEL
+function populateDevRequests(){
+    if(!currentUser.dev) return;
+    const list=document.getElementById('devReqList');
+    const pending=requests.filter(r=>r.status==='Pending');
+    if(pending.length===0){list.innerHTML='No requests'; return;}
+    list.innerHTML='';
+    pending.forEach((r,i)=>{
+        const div=document.createElement('div'); div.className='card';
+        div.innerHTML=`${r.user} | ${r.company} - ${r.model} <br>
+        <button onclick="acceptRequest(${i})">Accept</button>
+        <button onclick="declineRequest(${i})">Decline</button>`;
+        list.appendChild(div);
+    });
+}
+function acceptRequest(i){requests[i].status='Accepted';localStorage.setItem('requests',JSON.stringify(requests));populateDevRequests();}
+function declineRequest(i){requests[i].status='Declined';localStorage.setItem('requests',JSON.stringify(requests));populateDevRequests();}
+
+// ANNOUNCEMENTS
+function sendAnnouncement(){
+    const text=document.getElementById('announcementText').value.trim();
+    if(!text){alert('Type announcement'); return;}
+    announcements.push(text);
+    localStorage.setItem('announcements',JSON.stringify(announcements));
+    populateAnnouncements();
+}
+function populateAnnouncements(){
+    const div=document.getElementById('announcements');
+    div.innerHTML='';
+    announcements.forEach(a=>{
+        const p=document.createElement('p'); p.innerText='📢 '+a;
+        div.appendChild(p);
+    });
+}
+ </script> 
