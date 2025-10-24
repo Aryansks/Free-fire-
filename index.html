@@ -1,1 +1,292 @@
-hello
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FF Max Sensi</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#000;color:#fff;}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#0a0a0a;border-bottom:3px solid red;position:sticky;top:0;}
+button{padding:10px 20px;margin:5px;font-size:16px;background:red;color:#fff;border:none;border-radius:8px;cursor:pointer;transition:0.2s;}
+button:hover{background:#ff1a1a;transform:scale(1.05);}
+.hidden{display:none;}
+.container{padding:20px;}
+h1,h2,h3{color:red;}
+.card{background:#111;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #222;transition:0.2s;}
+.card:hover{background:#1a1a1a;}
+.scrollable{max-height:200px;overflow-y:auto;padding-right:5px;}
+.req-pending{color:yellow;}
+.req-accepted{color:limegreen;}
+.req-declined{color:red;}
+</style>
+</head>
+<body>
+<header>
+<div id="headerUser">Not logged</div>
+<div>
+<button id="logoutBtn" class="hidden" onclick="logout()">LOGOUT</button>
+<button id="cartBtn" class="hidden" onclick="openCart()">🛒 Cart</button>
+</div>
+</header>
+
+<div class="container" id="loginDiv">
+<h1>Login</h1>
+<input type="text" id="loginUser" placeholder="Enter username">
+<button id="loginBtn">Login</button>
+</div>
+
+<div class="container hidden" id="homeDiv">
+<h1>Welcome <span id="uname"></span></h1>
+<div id="announcements" class="scrollable"></div>
+<button id="sensiBtn" onclick="showSensi()">SENSI</button>
+<button id="requestsBtn" onclick="showRequests()">REQUESTS</button>
+</div>
+
+<div class="container hidden" id="sensiDiv">
+<h2>Select Company & Model</h2>
+<select id="companySelect" onchange="renderModels()"></select>
+<div id="modelList"></div>
+<button onclick="backHome()">Back</button>
+</div>
+
+<div class="container hidden" id="requestsDiv">
+<h2>My Requests</h2>
+<div id="reqList" class="scrollable">No requests yet</div>
+<button onclick="backHome()">Back</button>
+</div>
+
+<div class="container hidden" id="buyFormDiv">
+<h2>Buy Now - Fill Form</h2>
+<input type="text" id="buyName" placeholder="First Name"><br>
+<input type="text" id="buyLast" placeholder="Last Name"><br>
+<input type="text" id="buyUID" placeholder="In-Game UID"><br>
+<button onclick="sendBuyRequest()">Send Request</button>
+<button onclick="backHome()">Cancel</button>
+</div>
+
+<div class="container hidden" id="devDiv">
+<h2>Developer Panel</h2>
+<h3>User Requests</h3>
+<div id="devReqList" class="scrollable">No requests yet</div>
+<h3>Manage Announcements</h3>
+<textarea id="announcementText" placeholder="Type announcement..." style="width:100%;height:60px;"></textarea><br>
+<button onclick="sendAnnouncement()">Send Announcement</button>
+<div id="devAnnList" class="scrollable"></div>
+</div>
+
+<script>
+// ------------------- Data -------------------
+const COMPANIES={
+"Xiaomi":["Redmi Note 13 Pro 📱","Redmi Note 13 Pro+ 🔥","Mi 12 🌀","Mi 11 ⚡","Poco X6 Pro 🎯","Redmi 12C","Redmi 11 Prime","Redmi K60 Ultra"],
+"iPhone":["iPhone 16e 🍏","iPhone 15 Pro 🌟","iPhone 15","iPhone 14 Pro","iPhone 14","iPhone 13","iPhone 12 Mini","iPhone SE 3"],
+"Samsung":["Galaxy S24 Ultra 💎","Galaxy S23 Ultra","Galaxy S23+","Galaxy S23","Galaxy A54","Galaxy A14","Galaxy Z Fold5","Galaxy Z Flip5"],
+"Realme":["Realme GT Neo 6 SE 🚀","Realme Narzo 60X","Realme 11 Pro","Realme 10","Realme 9 Pro+","Realme 8","Realme C55","Realme Narzo 70A"],
+"Vivo":["Vivo V27 Pro 🌈","Vivo V25","Vivo X90","Vivo X80 Pro","Vivo Y100","Vivo Y35","Vivo Y21","Vivo X90e"],
+"Oppo":["Oppo Reno 11 💠","Oppo Find X6","Oppo A77","Oppo F21 Pro","Oppo A17","Oppo A78","Oppo Reno 9","Oppo F19"],
+"OnePlus":["OnePlus 12 ⚡","OnePlus Nord 3 🌟","OnePlus 11","OnePlus 10T","OnePlus 10 Pro","OnePlus 9R","OnePlus 8T","OnePlus Nord CE 3"],
+"Infinix":["Infinix Zero Ultra 🔹","Infinix Note 30","Infinix Hot 20","Infinix Hot 12","Infinix Zero 5G","Infinix Hot 30","Infinix Note 30 Pro","Infinix Zero 20"],
+"Tecno":["Tecno Phantom X 🔥","Tecno Camon 20","Tecno Camon 19","Tecno Camon 18","Tecno Spark 10","Tecno Spark 9","Tecno Camon 17","Tecno Phantom 9"],
+"Huawei":["Huawei P60 Pro 🌌","Huawei Mate 50","Huawei Mate 40 Pro","Huawei P50 Pro","Huawei Mate 30 Pro","Huawei P40","Huawei Nova 11","Huawei Y9a"],
+"Asus ROG Phone":["ROG Phone 7 ⚡","ROG Phone 6D","ROG Phone 6","ROG Phone 5","ROG Phone 3","ROG Phone 2","ROG Phone 1","ROG Phone 5s"],
+"Nothing":["Nothing Phone 1 🔵","Nothing Phone 1T 🌟","Nothing Phone 2 🟡","Nothing Phone 2T ⚡","Nothing Phone 3 Pro 🌀","Nothing Phone 3a 🌟","Nothing Phone 4 🟢","Nothing Phone 4a 🔴"]
+};
+
+let currentUser=null;
+let requests=JSON.parse(localStorage.getItem('requests'))||[];
+let announcements=JSON.parse(localStorage.getItem('announcements'))||[];
+
+// ------------------- Login -------------------
+document.getElementById('loginBtn').addEventListener('click', function(){
+    const uname=document.getElementById('loginUser').value.trim();
+    if(!uname){alert('Enter username'); return;}
+    if(uname.toUpperCase()==='DEV999'){
+        const code=prompt('Enter developer password:');
+        if(code!=='NEWPASS999'){alert('Wrong developer password'); return;}
+        currentUser={name:'DEV999',dev:true};
+    } else {
+        currentUser={name:uname,dev:false};
+    }
+    localStorage.setItem('user',JSON.stringify(currentUser));
+    afterLogin();
+});
+
+function afterLogin(){
+    document.getElementById('loginDiv').classList.add('hidden');
+    document.getElementById('homeDiv').classList.remove('hidden');
+    document.getElementById('logoutBtn').classList.remove('hidden');
+    document.getElementById('uname').innerText=currentUser.name;
+    document.getElementById('headerUser').innerText=currentUser.dev?'Developer':'User';
+    populateAnnouncements();
+    populateRequests();
+    populateCompanies();
+    if(currentUser.dev){
+        document.getElementById('devDiv').classList.remove('hidden');
+        document.getElementById('sensiBtn').style.display='none';
+        document.getElementById('requestsBtn').style.display='none';
+        populateDevRequests();
+    } else {
+        document.getElementById('devDiv').classList.add('hidden');
+        document.getElementById('sensiBtn').style.display='inline-block';
+        document.getElementById('requestsBtn').style.display='inline-block';
+    }
+}
+
+window.onload=function(){
+    const user=JSON.parse(localStorage.getItem('user'));
+    if(user){currentUser=user; afterLogin();}
+};
+
+function logout(){localStorage.removeItem('user'); location.reload();}
+
+// ------------------- SENSI -------------------
+function populateCompanies(){
+    const select=document.getElementById('companySelect');
+    select.innerHTML='<option value="">--Select Company--</option>';
+    Object.keys(COMPANIES).forEach(c=>{
+        const opt=document.createElement('option'); 
+        opt.value=c; opt.innerText=c; select.appendChild(opt);
+    });
+}
+
+function renderModels(){
+    const company=document.getElementById('companySelect').value;
+    const modelList=document.getElementById('modelList');
+    modelList.innerHTML='';
+    if(!company) return;
+    COMPANIES[company].forEach(model=>{
+        const btn=document.createElement('button');
+        btn.innerText=model+' - BUY NOW';
+        btn.onclick=()=>buyNow(model,company);
+        modelList.appendChild(btn);
+    });
+}
+
+function buyNow(model,company){
+    document.getElementById('sensiDiv').classList.add('hidden');
+    document.getElementById('buyFormDiv').classList.remove('hidden');
+    document.getElementById('buyFormDiv').dataset.model=model;
+    document.getElementById('buyFormDiv').dataset.company=company;
+}
+
+// ------------------- Requests -------------------
+function sendBuyRequest(){
+    const fname=document.getElementById('buyName').value.trim();
+    const lname=document.getElementById('buyLast').value.trim();
+    const uid=document.getElementById('buyUID').value.trim();
+    const model=document.getElementById('buyFormDiv').dataset.model;
+    const company=document.getElementById('buyFormDiv').dataset.company;
+    if(!fname || !lname || !uid){alert('Fill all fields'); return;}
+    const req={user:currentUser.name,company,model,uid,status:'Pending',sensitivity:null};
+    requests.push(req);
+    localStorage.setItem('requests',JSON.stringify(requests));
+    populateRequests();
+    populateDevRequests();
+    alert('Request sent!');
+    backHome();
+}
+
+// ------------------- Populate Requests -------------------
+function populateRequests(){
+    const div=document.getElementById('reqList'); div.innerHTML='';
+    const userReq=requests.filter(r=>r.user===currentUser.name);
+    if(userReq.length===0){div.innerText='No requests yet'; return;}
+    userReq.forEach(r=>{
+        const d=document.createElement('div'); d.className='card';
+        let sensiText='';
+        if(r.status==='Accepted' && r.sensitivity){
+            sensiText = `<br>⚙️ Sensitivity Setup:<br>
+            General: ${r.sensitivity.general}<br>
+            Red Dot: ${r.sensitivity.redDot}<br>
+            2x Scope: ${r.sensitivity.twoX}<br>
+            3x Scope: ${r.sensitivity.threeX}<br>
+            4x Scope: ${r.sensitivity.fourX}<br>
+            AWM Scope: ${r.sensitivity.awm}`;
+        }
+        d.innerHTML=`${r.company} - ${r.model}<br>UID: ${r.uid}<br>Status: <span class="req-${r.status.toLowerCase()}">${r.status}</span>${sensiText}`;
+        div.appendChild(d);
+    });
+}
+
+// ------------------- Announcements -------------------
+function populateAnnouncements(){
+    const div=document.getElementById('announcements');
+    div.innerHTML='';
+    if(announcements.length===0){div.innerText='No announcements'; return;}
+    announcements.forEach((a,i)=>{
+        const d=document.createElement('div'); d.className='card';
+        d.innerHTML=`📢 ${a} ${currentUser.dev ? '<button onclick="deleteAnnouncement('+i+')">Delete</button>':''}`;
+        div.appendChild(d);
+    });
+}
+
+function sendAnnouncement(){
+    const text=document.getElementById('announcementText').value.trim();
+    if(!text){alert('Type announcement'); return;}
+    announcements.push(text);
+    localStorage.setItem('announcements',JSON.stringify(announcements));
+    populateAnnouncements();
+    document.getElementById('announcementText').value='';
+}
+
+function deleteAnnouncement(index){
+    if(confirm('Delete this announcement?')){
+        announcements.splice(index,1);
+        localStorage.setItem('announcements',JSON.stringify(announcements));
+        populateAnnouncements();
+    }
+}
+
+// ------------------- Developer Panel -------------------
+function populateDevRequests(){
+    const div=document.getElementById('devReqList');
+    div.innerHTML='';
+    const pending=requests.filter(r=>r.status==='Pending');
+    if(pending.length===0){div.innerText='No pending requests'; return;}
+    pending.forEach((r,i)=>{
+        const d=document.createElement('div'); d.className='card';
+        d.innerHTML=`${r.user}: ${r.company} - ${r.model} <br>UID: ${r.uid}<br>
+        <button onclick="acceptRequest(${i})">Accept</button>
+        <button onclick="declineRequest(${i})">Decline</button>`;
+        div.appendChild(d);
+    });
+}
+
+function randomSensi(){
+    return {
+        general: Math.floor(Math.random()*191)+10,
+        redDot: Math.floor(Math.random()*191)+10,
+        twoX: Math.floor(Math.random()*191)+10,
+        threeX: Math.floor(Math.random()*191)+10,
+        fourX: Math.floor(Math.random()*191)+10,
+        awm: Math.floor(Math.random()*191)+10
+    };
+}
+
+function acceptRequest(index){
+    const req = requests[index];
+    req.status='Accepted';
+    req.sensitivity = randomSensi();
+    localStorage.setItem('requests',JSON.stringify(requests));
+    populateDevRequests();
+    populateRequests();
+}
+
+function declineRequest(index){
+    const req = requests[index];
+    req.status='Declined';
+    req.sensitivity=null;
+    requests.splice(index,1); // remove immediately from developer panel
+    localStorage.setItem('requests',JSON.stringify(requests));
+    populateDevRequests();
+    populateRequests();
+}
+
+// ------------------- Navigation -------------------
+function backHome(){
+    ['sensiDiv','requestsDiv','buyFormDiv'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+    document.getElementById('homeDiv').classList.remove('hidden');
+}
+
+function showSensi(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('sensi
