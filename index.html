@@ -15,12 +15,12 @@ h1,h2,h3{color:red;}
 .card{background:#111;padding:15px;margin:10px 0;border-radius:8px;border:1px solid #222;transition:0.3s;}
 .card:hover{transform:scale(1.02);}
 select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;background:#111;color:#fff;width:100%;}
-#splash{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;color:red;font-size:28px;z-index:1000;}
 .animated{animation:pulse 2s infinite;}
 @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
 </style>
 </head>
 <body>
+
 <header>
 <div id="headerUser">Not logged</div>
 <div>
@@ -88,10 +88,7 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 </div>
 
 <script>
-// Splash
-setTimeout(()=>{document.getElementById('splash').style.display='none';},2000);
-
-// Data
+// Phone data
 const COMPANIES={
 "Xiaomi":["Redmi Note 13 Pro 📱","Redmi Note 13 Pro+ 🔥","Mi 12 🌀","Mi 11 ⚡","Poco X6 Pro 🎯","Redmi 13c","Mi 13 Ultra","Poco F5 GT","Redmi 12","Redmi 12x","Redmi Note 12 Turbo","Redmi 11T","Redmi 10X","Poco X5 Pro","Mi 10T","Mi 9T Pro","Redmi K60","Mi MIX 4","Poco M5","Redmi Note 11 Pro"],
 "iPhone":["iPhone 16e 🍏","iPhone 15 Pro 🌟","iPhone 15","iPhone 14 Pro","iPhone 14","iPhone 13 Pro","iPhone 13","iPhone 12 Pro","iPhone 12","iPhone 11 Pro","iPhone 11","iPhone SE 3","iPad Pro 12.9","iPad Air 5","iPad Mini 6","iPhone XS","iPhone XR","iPhone X","iPhone 8","iPhone 8 Plus"],
@@ -104,84 +101,4 @@ const COMPANIES={
 "Tecno":["Tecno Phantom X 🔥","Tecno Camon 20","Tecno Camon 19","Tecno Camon 18","Tecno Spark 10","Tecno Spark 9","Tecno Spark 8","Tecno Pova 5","Tecno Pova 3","Tecno Pova 2","Tecno Spark 7","Tecno Spark 6","Tecno Camon 17","Tecno Camon 16","Tecno Camon 15","Tecno Phantom X Pro","Tecno Phantom 12","Tecno Phantom 11","Tecno Spark 5","Tecno Spark 4"],
 "Huawei":["Huawei P60 Pro 🌌","Huawei Mate 50","Huawei Mate 40 Pro","Huawei P50 Pro","Huawei Mate 30 Pro","Huawei P40 Pro","Huawei Nova 10","Huawei Nova 9","Huawei Y9a","Huawei Y7a","Huawei P Smart 2021","Huawei MatePad 11","Huawei MediaPad T5","Huawei MatePad Pro","Huawei P30 Pro","Huawei P20 Pro","Huawei Mate 20 Pro","Huawei Mate 10 Pro","Huawei Y6p","Huawei Y5p"],
 "Asus ROG Phone":["ROG Phone 7 ⚡","ROG Phone 6D","ROG Phone 6","ROG Phone 5","ROG Phone 3","ROG Phone 2","ROG Phone 1","ROG Phone 2 Pro","ROG Phone 5 Ultimate","ROG Phone 5s","ROG Phone 6 Pro","ROG Phone 6 Ultimate","ROG Phone 7 Ultimate","ROG Phone 7 Pro","ROG Phone 3s","ROG Phone 2s","ROG Phone 1 Pro","ROG Phone Max","ROG Phone Turbo","ROG Phone GT"],
-"Nothing":["Nothing 3a 🛸","Nothing 2 💫","Nothing 1","Nothing 3","Nothing Phone 2","Nothing Phone 1","Nothing 5G","Nothing X","Nothing Nova","Nothing Max","Nothing Plus","Nothing Lite","Nothing Ultra","Nothing X Pro","Nothing X Plus","Nothing SE","Nothing 4G","Nothing 3 Pro","Nothing 3 Lite","Nothing Mini"]
-};
-
-// LocalStorage
-const LS_REQ='ff_req';
-const LS_ANN='ff_ann';
-let cart=[];
-let currentUser=null;
-let currentBuyItem=null;
-
-// Helpers
-function lsGet(k,d){try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}}
-function lsSet(k,v){localStorage.setItem(k,JSON.stringify(v))}
-
-// Login
-function login(){
-  let u=document.getElementById('loginUser').value.trim();
-  if(!u){alert('Enter username'); return;}
-  if(u.toUpperCase()==='DEV999'){
-    let code=prompt('Enter developer code:');
-    if(code!=='devpass'){alert('Wrong code'); return;}
-    currentUser={username:'DEV999',role:'dev'};
-  } else {
-    currentUser={username:u,role:'user'};
-  }
-  lsSet('ff_user',currentUser);
-  afterLogin();
-}
-
-// Auto-login
-window.onload=function(){
-  let u=lsGet('ff_user',null);
-  if(u){currentUser=u; afterLogin();}
-  populateCompanies();
-}
-
-// After login
-function afterLogin(){
-  document.getElementById('loginDiv').classList.add('hidden');
-  document.getElementById('homeDiv').classList.remove('hidden');
-  document.getElementById('headerUser').innerText=currentUser.username;
-  document.getElementById('logoutBtn').classList.remove('hidden');
-  if(currentUser.role==='user'){document.getElementById('cartBtn').classList.remove('hidden'); renderRequests(); showAnnouncements();}
-  if(currentUser.role==='dev'){document.getElementById('devDiv').classList.remove('hidden'); renderDevRequests();}
-}
-
-// Logout
-function logout(){localStorage.removeItem('ff_user');location.reload();}
-
-// Populate companies
-function populateCompanies(){
-  let sel=document.getElementById('companySelect');
-  sel.innerHTML=''; for(let c in COMPANIES){let o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);}
-  renderModels();
-}
-function renderModels(){
-  let comp=document.getElementById('companySelect').value;
-  let ml=document.getElementById('modelList'); ml.innerHTML='';
-  COMPANIES[comp].forEach(m=>{
-    let d=document.createElement('div'); d.className='card'; 
-    d.innerHTML=`<strong>${m}</strong><br>
-    <button onclick="addToCart('${comp}','${m}')">Add to Cart 🛒</button> 
-    <button onclick="buyNow('${comp}','${m}')">Buy Now</button>`;
-    ml.appendChild(d);
-  });
-}
-
-// Navigation
-function showSensi(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('sensiDiv').classList.remove('hidden');}
-function showRequests(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('requestsDiv').classList.remove('hidden');renderRequests();}
-function backHome(){
-  document.getElementById('sensiDiv').classList.add('hidden');
-  document.getElementById('requestsDiv').classList.add('hidden');
-  document.getElementById('cartDiv').classList.add('hidden');
-  document.getElementById('buyFormDiv').classList.add('hidden');
-  document.getElementById('homeDiv').classList.remove('hidden');
-}
-
-// Cart
-function addToCart(comp,model){cart.push({company:comp,model:model}); alert(model+' added to cart');}
-function openCart(){document.getElementById('homeDiv').classList.add('hidden'); document.getElementById
+"Nothing":["Nothing 3a 🛸","Nothing 2 💫
