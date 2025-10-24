@@ -157,8 +157,192 @@ function afterLogin(){
     }
 }
 
-// --- Rest of functions: SENSI, Requests, Cart, Announcements ---
-// Use the previous fully working functions from the last complete code snippet
+// --- Populate companies in SENSI ---
+function populateCompanies(){
+    const select = document.getElementById('companySelect');
+    select.innerHTML = '<option value="">--Select Company--</option>';
+    Object.keys(COMPANIES).forEach(c=>{
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.innerText = c;
+        select.appendChild(opt);
+    });
+}
+
+// --- Render models after company selected ---
+function renderModels(){
+    const sel = document.getElementById('companySelect');
+    const modelsDiv = document.getElementById('modelList');
+    modelsDiv.innerHTML = '';
+    const models = COMPANIES[sel.value]||[];
+    models.forEach(m=>{
+        const btn = document.createElement('button');
+        btn.innerText = m;
+        btn.onclick = ()=>{ openBuyForm(sel.value,m); };
+        modelsDiv.appendChild(btn);
+    });
+}
+
+// --- Show Buy Form ---
+let selectedCompany='', selectedModel='';
+function openBuyForm(company,model){
+    selectedCompany=company;
+    selectedModel=model;
+    document.getElementById('sensiDiv').classList.add('hidden');
+    document.getElementById('buyFormDiv').classList.remove('hidden');
+}
+
+// --- Send Buy Request ---
+function sendBuyRequest(){
+    const fname=document.getElementById('buyName').value.trim();
+    const lname=document.getElementById('buyLast').value.trim();
+    const uid=document.getElementById('buyUID').value.trim();
+    if(!fname||!lname||!uid){ alert('Fill all fields'); return; }
+    const req = {
+        id:Date.now(),
+        user:currentUser.name,
+        company:selectedCompany,
+        model:selectedModel,
+        fname,fname,lname,uid,
+        status:'Pending'
+    };
+    requests.push(req);
+    localStorage.setItem('requests',JSON.stringify(requests));
+    alert('Request sent!');
+    document.getElementById('buyFormDiv').classList.add('hidden');
+    backHome();
+    populateRequests();
+    if(currentUser.dev===false) populateRequests();
+    if(currentUser.dev===true) populateDevRequests();
+}
+
+// --- Back Home ---
+function backHome(){
+    document.getElementById('sensiDiv').classList.add('hidden');
+    document.getElementById('requestsDiv').classList.add('hidden');
+    document.getElementById('buyFormDiv').classList.add('hidden');
+    document.getElementById('homeDiv').classList.remove('hidden');
+    document.getElementById('cartDiv').classList.add('hidden');
+}
+
+// --- Show SENSI ---
+function showSensi(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('sensiDiv').classList.remove('hidden');
+}
+
+// --- Show Requests ---
+function showRequests(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('requestsDiv').classList.remove('hidden');
+    populateRequests();
+}
+
+// --- Populate User Requests ---
+function populateRequests(){
+    const div = document.getElementById('reqList');
+    div.innerHTML='';
+    requests.filter(r=>r.user===currentUser.name).forEach(r=>{
+        const d = document.createElement('div');
+        d.classList.add('card');
+        d.innerHTML=`${r.company} - ${r.model} <br>Status: <span class="req-${r.status.toLowerCase()}">${r.status}</span>`;
+        div.appendChild(d);
+    });
+}
+
+// --- Developer Requests ---
+function populateDevRequests(){
+    const div=document.getElementById('devReqList');
+    div.innerHTML='';
+    requests.filter(r=>r.status==='Pending').forEach(r=>{
+        const d=document.createElement('div');
+        d.classList.add('card');
+        d.innerHTML=`${r.user} requested ${r.company} - ${r.model} <br>
+        <button onclick="devAccept(${r.id})">Accept</button>
+        <button onclick="devDecline(${r.id})">Decline</button>`;
+        div.appendChild(d);
+    });
+}
+
+// --- Developer Accept ---
+function devAccept(id){
+    const r=requests.find(x=>x.id===id);
+    if(r){ r.status='Accepted'; localStorage.setItem('requests',JSON.stringify(requests)); }
+    populateDevRequests();
+    populateRequests();
+}
+
+// --- Developer Decline ---
+function devDecline(id){
+    const r=requests.find(x=>x.id===id);
+    if(r){ r.status='Declined'; localStorage.setItem('requests',JSON.stringify(requests)); }
+    populateDevRequests();
+    populateRequests();
+}
+
+// --- Announcements ---
+function populateAnnouncements(){
+    const div=document.getElementById('announcements');
+    div.innerHTML='';
+    announcements.forEach(a=>{
+        const d=document.createElement('div');
+        d.classList.add('card');
+        d.innerText=a.text;
+        div.appendChild(d);
+    });
+}
+
+function renderDevAnnouncements(){
+    const div=document.getElementById('devAnnList');
+    div.innerHTML='';
+    announcements.forEach((a,i)=>{
+        const d=document.createElement('div');
+        d.classList.add('card');
+        d.innerHTML=`${a.text} <button onclick="deleteAnnouncement(${i})">Delete</button>`;
+        div.appendChild(d);
+    });
+}
+
+function sendAnnouncement(){
+    const txt=document.getElementById('announcementText').value.trim();
+    if(!txt){ alert('Enter text'); return; }
+    announcements.push({text:txt});
+    localStorage.setItem('announcements',JSON.stringify(announcements));
+    document.getElementById('announcementText').value='';
+    renderDevAnnouncements();
+    populateAnnouncements();
+}
+
+function deleteAnnouncement(i){
+    announcements.splice(i,1);
+    localStorage.setItem('announcements',JSON.stringify(announcements));
+    renderDevAnnouncements();
+    populateAnnouncements();
+}
+
+// --- Cart Functions ---
+function openCart(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('cartDiv').classList.remove('hidden');
+    const div=document.getElementById('cartItems');
+    div.innerHTML='';
+    cart.forEach((c,i)=>{
+        const d=document.createElement('div');
+        d.classList.add('card');
+        d.innerText=`${c.company} - ${c.model}`;
+        div.appendChild(d);
+    });
+}
+
+function continueCart(){
+    alert('Continue clicked - implement form here if needed');
+}
+
+// --- Logout ---
+function logout(){
+    localStorage.removeItem('user');
+    location.reload();
+}
 
 </script>
 </body>
