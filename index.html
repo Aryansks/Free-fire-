@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FF Max Sensi</title>
 <style>
-/* ----- Base Styles ----- */
 body{margin:0;font-family:Arial,sans-serif;background:#000;color:#fff;transition:0.3s;}
 header{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#0a0a0a;border-bottom:3px solid red;position:sticky;top:0;z-index:10;}
 button{padding:10px 20px;margin:5px;font-size:16px;background:red;color:#fff;border:none;border-radius:8px;cursor:pointer;transition:0.3s;}
@@ -18,11 +17,9 @@ h1,h2,h3{color:red;margin:5px 0;}
 select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;background:#111;color:#fff;width:100%;margin:5px 0;}
 .animated{animation:pulse 2s infinite;}
 @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
-/* ----- Request status colors ----- */
 .req-pending{color:yellow;}
 .req-accepted{color:limegreen;}
 .req-declined{color:red;}
-/* ----- Responsive ----- */
 @media(max-width:600px){
 button{width:100%;margin:5px 0;}
 .card{font-size:14px;padding:10px;}
@@ -39,14 +36,12 @@ button{width:100%;margin:5px 0;}
 </div>
 </header>
 
-<!-- Login -->
 <div class="container" id="loginDiv">
 <h1>Login</h1>
 <input type="text" id="loginUser" placeholder="Enter username">
 <button onclick="login()">Login</button>
 </div>
 
-<!-- Home -->
 <div class="container hidden" id="homeDiv">
 <h1>Welcome <span id="uname"></span></h1>
 <div id="announcements" class="scrollable"></div>
@@ -54,7 +49,6 @@ button{width:100%;margin:5px 0;}
 <button id="requestsBtn" onclick="showRequests()">REQUESTS</button>
 </div>
 
-<!-- SENSI -->
 <div class="container hidden" id="sensiDiv">
 <h2>Select Company & Model</h2>
 <select id="companySelect" onchange="renderModels()"></select><br><br>
@@ -62,14 +56,12 @@ button{width:100%;margin:5px 0;}
 <button onclick="backHome()">Back</button>
 </div>
 
-<!-- Requests -->
 <div class="container hidden" id="requestsDiv">
 <h2>My Requests</h2>
 <div id="reqList" class="scrollable">No requests yet</div>
 <button onclick="backHome()">Back</button>
 </div>
 
-<!-- Buy Now / Form -->
 <div class="container hidden" id="buyFormDiv">
 <h2>Buy Now - Fill Form</h2>
 <input type="text" id="buyName" placeholder="First Name"><br>
@@ -79,7 +71,6 @@ button{width:100%;margin:5px 0;}
 <button onclick="backHome()">Cancel</button>
 </div>
 
-<!-- Cart -->
 <div class="container hidden" id="cartDiv">
 <h2>Cart</h2>
 <div id="cartList" class="scrollable">Cart is empty</div>
@@ -87,7 +78,6 @@ button{width:100%;margin:5px 0;}
 <button onclick="backHome()">Back</button>
 </div>
 
-<!-- Developer Panel -->
 <div class="container hidden" id="devDiv">
 <h2>Developer Panel</h2>
 <h3>User Requests</h3>
@@ -99,9 +89,6 @@ button{width:100%;margin:5px 0;}
 </div>
 
 <script>
-// -------------------------
-// DATA
-// -------------------------
 const COMPANIES={
 "Xiaomi":["Redmi Note 13 Pro 📱","Redmi Note 13 Pro+ 🔥","Mi 12 🌀","Mi 11 ⚡","Poco X6 Pro 🎯"],
 "iPhone":["iPhone 16e 🍏","iPhone 15 Pro 🌟","iPhone 15","iPhone 14 Pro","iPhone 14"],
@@ -114,16 +101,13 @@ const COMPANIES={
 "Tecno":["Tecno Phantom X 🔥","Tecno Camon 20","Tecno Camon 19","Tecno Camon 18","Tecno Spark 10"],
 "Huawei":["Huawei P60 Pro 🌌","Huawei Mate 50","Huawei Mate 40 Pro","Huawei P50 Pro","Huawei Mate 30 Pro"],
 "Asus ROG Phone":["ROG Phone 7 ⚡","ROG Phone 6D","ROG Phone 6","ROG Phone 5","ROG Phone 3"],
-"Nothing":["Nothing Phone 2 🟡","Nothing Phone 1 🔵","Nothing Phone 1T 🌟","Nothing Phone 2T ⚡","Nothing Phone 3 Pro 🌀"]
+"Nothing":["Nothing Phone 1 🔵","Nothing Phone 1T 🌟","Nothing Phone 2 🟡","Nothing Phone 2T ⚡","Nothing Phone 3 Pro 🌀","Nothing Phone 3a 🌟"]
 };
 let currentUser=null;
 let requests=JSON.parse(localStorage.getItem('requests'))||[];
 let announcements=JSON.parse(localStorage.getItem('announcements'))||[];
 let cart=[];
 
-// -------------------------
-// LOGIN
-// -------------------------
 function login(){
     const uname=document.getElementById('loginUser').value.trim();
     if(!uname){alert('Enter username'); return;}
@@ -164,26 +148,38 @@ function afterLogin(){
     }
 }
 
-// -------------------------
-// SESSION CHECK
-// -------------------------
 window.onload=function(){
     const user=JSON.parse(localStorage.getItem('user'));
     if(user){currentUser=user; afterLogin();}
 };
 function logout(){localStorage.removeItem('user');location.reload();}
-
-// -------------------------
-// NAVIGATION
-// -------------------------
 function backHome(){
     ['sensiDiv','requestsDiv','buyFormDiv','cartDiv'].forEach(id=>document.getElementById(id).classList.add('hidden'));
     document.getElementById('homeDiv').classList.remove('hidden');
 }
+function showSensi(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('sensiDiv').classList.remove('hidden');
+}
+function showRequests(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('requestsDiv').classList.remove('hidden');
+    populateRequests();
+}
+function openCart(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('cartDiv').classList.remove('hidden');
+    const cartDiv=document.getElementById('cartList');
+    if(cart.length===0){cartDiv.innerHTML='Cart is empty'; return;}
+    cartDiv.innerHTML='';
+    cart.forEach(c=>{
+        const div=document.createElement('div'); div.className='card';
+        div.innerText=`${c.company} - ${c.model}`;
+        cartDiv.appendChild(div);
+    });
+}
+function cartContinue(){if(cart.length===0){alert('Cart is empty!'); return;} alert('Continue to Buy Now form');}
 
-// -------------------------
-// SENSI
-// -------------------------
 function populateCompanies(){
   const companySelect=document.getElementById('companySelect');
   companySelect.innerHTML='<option value="">Select Company</option>';
@@ -205,98 +201,8 @@ function renderModels(){
   });
 }
 
-// -------------------------
-// BUY NOW
-// -------------------------
 let selectedCompany='',selectedModel='';
 function buyNow(company,model){
     selectedCompany=company;
     selectedModel=model;
-    document.getElementById('sensiDiv').classList.add('hidden');
-    document.getElementById('buyFormDiv').classList.remove('hidden');
-}
-function sendBuyRequest(){
-    const name=document.getElementById('buyName').value.trim();
-    const last=document.getElementById('buyLast').value.trim();
-    const uid=document.getElementById('buyUID').value.trim();
-    if(!name||!last||!uid){alert('Fill all fields'); return;}
-    const req={user:currentUser.name,company:selectedCompany,model:selectedModel,name:name,last:last,uid:uid,status:'Pending'};
-    requests.push(req);
-    localStorage.setItem('requests',JSON.stringify(requests));
-    alert('Request sent to developer');
-    document.getElementById('buyFormDiv').classList.add('hidden');
-    backHome();
-    populateRequests();
-    populateDevRequests();
-}
-
-// -------------------------
-// USER REQUESTS
-// -------------------------
-function populateRequests(){
-    if(currentUser.dev) return;
-    const list=document.getElementById('reqList');
-    const userReqs=requests.filter(r=>r.user===currentUser.name);
-    if(userReqs.length===0){list.innerHTML='No requests yet'; return;}
-    list.innerHTML='';
-    userReqs.forEach(r=>{
-        const div=document.createElement('div'); div.className='card';
-        let statusClass=r.status==='Pending'?'req-pending':r.status==='Accepted'?'req-accepted':'req-declined';
-        div.innerHTML=`${r.company} - ${r.model} | <span class="${statusClass}">Status: ${r.status}</span>`;
-        list.appendChild(div);
-    });
-}
-
-// -------------------------
-// DEVELOPER REQUESTS
-// -------------------------
-function populateDevRequests(){
-    if(!currentUser.dev) return;
-    const list=document.getElementById('devReqList');
-    const pending=requests.filter(r=>r.status==='Pending');
-    if(pending.length===0){list.innerHTML='No requests'; return;}
-    list.innerHTML='';
-    pending.forEach((r,i)=>{
-        const div=document.createElement('div'); div.className='card';
-        div.innerHTML=`${r.user} | ${r.company} - ${r.model} <br>
-        <button onclick="acceptRequest(${i})">Accept</button>
-        <button onclick="declineRequest(${i})">Decline</button>`;
-        list.appendChild(div);
-    });
-}
-function acceptRequest(i){requests[i].status='Accepted';localStorage.setItem('requests',JSON.stringify(requests));populateDevRequests();populateRequests();}
-function declineRequest(i){requests[i].status='Declined';localStorage.setItem('requests',JSON.stringify(requests));populateDevRequests();populateRequests();}
-
-// -------------------------
-// ANNOUNCEMENTS
-// -------------------------
-function populateAnnouncements(){
-    if(currentUser.dev) return;
-    const div=document.getElementById('announcements');
-    div.innerHTML='';
-    announcements.forEach(a=>{
-        const p=document.createElement('p'); p.innerText='📢 '+a;
-        div.appendChild(p);
-    });
-}
-function sendAnnouncement(){
-    const text=document.getElementById('announcementText').value.trim();
-    if(!text){alert('Type announcement'); return;}
-    announcements.push(text);
-    localStorage.setItem('announcements',JSON.stringify(announcements));
-    document.getElementById('announcementText').value='';
-    populateDevAnnouncements();
-}
-function populateDevAnnouncements(){
-    const div=document.getElementById('devAnnList');
-    div.innerHTML='';
-    announcements.forEach((a,i)=>{
-        const d=document.createElement('div'); d.className='card';
-        d.innerHTML=`${a} <button onclick="deleteAnnouncement(${i})">Delete</button>`;
-        div.appendChild(d);
-    });
-}
-function deleteAnnouncement(i){announcements.splice(i,1);localStorage.setItem('announcements',JSON.stringify(announcements));populateDevAnnouncements();populateAnnouncements();}
-</script>
-</body>
-</html>
+    document
