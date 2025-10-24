@@ -17,7 +17,8 @@ h1,h2,h3{color:red;}
 .req-accepted{color:limegreen;}
 .req-declined{color:red;}
 input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;border:none;background:#222;color:#fff;}
-.model-buttons{display:flex;gap:10px;flex-wrap:wrap;}
+.model-buttons{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.card{border:1px solid red;padding:10px;margin:5px;border-radius:8px;background:#111;}
 </style>
 </head>
 <body>
@@ -43,7 +44,7 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 
 <div class="container hidden" id="homeDiv">
 <h1>Welcome <span id="uname"></span></h1>
-<div id="announcements" class="scrollable"></div>
+<div id="announcements" class="scrollable">No announcements yet</div>
 <button id="sensiBtn" onclick="showSensi()">SENSI</button>
 <button id="requestsBtn" onclick="showRequests()">REQUESTS</button>
 </div>
@@ -100,7 +101,18 @@ const COMPANIES={
 "Xiaomi":["Redmi Note 13 Pro 📱","Redmi Note 13 Pro+ 🔥","Mi 12 🌀","Mi 11 ⚡","Poco X6 Pro 🎯","Redmi 12C","Redmi 11 Prime","Redmi K60 Ultra"],
 "iPhone":["iPhone 16e 🍏","iPhone 15 Pro 🌟","iPhone 15","iPhone 14 Pro","iPhone 14","iPhone 13","iPhone 12 Mini","iPhone SE 3"],
 "Samsung":["Galaxy S24 Ultra 💎","Galaxy S23 Ultra","Galaxy S23+","Galaxy S23","Galaxy A54","Galaxy A14","Galaxy Z Fold5","Galaxy Z Flip5"],
-"Nothing":["Nothing Phone 1 🔵","Nothing Phone 1T 🌟","Nothing Phone 2 🟡","Nothing Phone 2T ⚡","Nothing Phone 3 Pro 🌀","Nothing Phone 3a 🌟","Nothing Phone 4 🟢","Nothing Phone 4a 🔴"]
+"Nothing":["Nothing Phone 1 🔵","Nothing Phone 1T 🌟","Nothing Phone 2 🟡","Nothing Phone 2T ⚡","Nothing Phone 3 Pro 🌀","Nothing Phone 3a 🌟","Nothing Phone 4 🟢","Nothing Phone 4a 🔴"],
+"Oppo":["Oppo Reno 10 Pro","Oppo F23","Oppo A77","Oppo Find X6"],
+"Realme":["Realme GT3","Realme 12 Pro","Realme 11i","Realme Narzo 60x"],
+"Vivo":["Vivo X100 Pro","Vivo V29","Vivo Y36","Vivo Y22"],
+"OnePlus":["OnePlus 12","OnePlus 11R","OnePlus Nord 3","OnePlus 10T"],
+"Huawei":["Huawei P60 Pro","Huawei Mate 60","Huawei Nova 12","Huawei Y9a"],
+"Motorola":["Moto Edge 40","Moto G73","Moto G72","Moto X40"],
+"LG":["LG Velvet 2","LG Wing 5G","LG V70","LG K62"],
+"Nokia":["Nokia X30","Nokia G60","Nokia 5710","Nokia XR20"],
+"Sony":["Sony Xperia 1 V","Sony Xperia 5 IV","Sony Xperia 10 IV","Sony Xperia L4"],
+"Asus":["Asus ROG Phone 7","Asus Zenfone 10","Asus Zenfone 9","Asus ROG Phone 6"],
+"Honor":["Honor Magic 5","Honor 90","Honor X9a","Honor 80"]
 };
 
 // --- Login & One-time login ---
