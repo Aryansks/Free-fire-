@@ -140,7 +140,6 @@ function afterLogin(){
         document.getElementById('sensiBtn').style.display='none';
         document.getElementById('requestsBtn').style.display='none';
         populateDevRequests();
-        populateDevAnnouncements();
     } else {
         document.getElementById('devDiv').classList.add('hidden');
         document.getElementById('sensiBtn').style.display='inline-block';
@@ -193,13 +192,13 @@ function sendBuyRequest(){
     const model=document.getElementById('buyFormDiv').dataset.model;
     const company=document.getElementById('buyFormDiv').dataset.company;
     if(!fname || !lname || !uid){alert('Fill all fields'); return;}
-    const req={user:currentUser.name,company,model,uid,status:'Pending'};
+    const req={user:currentUser.name,company,model,uid,status:'Pending',sensitivity:null};
     requests.push(req);
     localStorage.setItem('requests',JSON.stringify(requests));
+    populateRequests();
+    populateDevRequests();
     alert('Request sent!');
     backHome();
-    populateRequests();
-    if(currentUser.dev) populateDevRequests();
 }
 
 // ------------------- Requests & Announcements -------------------
@@ -209,7 +208,8 @@ function populateRequests(){
     if(userReq.length===0){div.innerText='No requests yet'; return;}
     userReq.forEach(r=>{
         const d=document.createElement('div'); d.className='card';
-        d.innerHTML=`${r.company} - ${r.model}<br>UID: ${r.uid}<br>Status: <span class="req-${r.status.toLowerCase()}">${r.status}</span>`;
+        let sensiText = r.status==='Accepted' ? `<br>Sensitivity: ${r.sensitivity}` : '';
+        d.innerHTML=`${r.company} - ${r.model}<br>UID: ${r.uid}<br>Status: <span class="req-${r.status.toLowerCase()}">${r.status}</span>${sensiText}`;
         div.appendChild(d);
     });
 }
@@ -258,14 +258,18 @@ function populateDevRequests(){
 }
 
 function acceptRequest(index){
-    requests[index].status='Accepted';
+    const req = requests[index];
+    req.status='Accepted';
+    req.sensitivity = Math.floor(Math.random()*201);
     localStorage.setItem('requests',JSON.stringify(requests));
     populateDevRequests();
     populateRequests();
 }
 
 function declineRequest(index){
-    requests[index].status='Declined';
+    const req = requests[index];
+    req.status='Declined';
+    req.sensitivity=null;
     localStorage.setItem('requests',JSON.stringify(requests));
     populateDevRequests();
     populateRequests();
@@ -291,7 +295,6 @@ function showRequests(){
 function openCart(){
     document.getElementById('homeDiv').classList.add('hidden');
     document.getElementById('cartDiv').classList.remove('hidden');
-    populateCart();
 }
 
 function cartContinue(){
