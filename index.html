@@ -117,22 +117,21 @@ const COMPANIES={
 
 // --- Login & One-time login ---
 window.addEventListener('DOMContentLoaded', function() {
-    const storedUser = JSON.parse(localStorage.getItem('user'));
-    if(storedUser){ currentUser = storedUser; afterLogin(); }
-    populateCompanies();
-    document.getElementById('loginBtn').addEventListener('click', function(){
+    const loginBtn = document.getElementById('loginBtn');
+    loginBtn.addEventListener('click', function() {
         const uname = document.getElementById('loginUser').value.trim();
         if(!uname){ alert('Enter username'); return; }
         if(uname.toUpperCase() === 'DEV999'){
             const code = prompt('Enter developer password:');
             if(code !== '999'){ alert('Wrong password'); return; }
             currentUser = {name:'DEV999', dev:true};
-        } else { currentUser = {name:uname, dev:false}; }
+        } else {
+            currentUser = {name:uname, dev:false};
+        }
         localStorage.setItem('user', JSON.stringify(currentUser));
         afterLogin();
     });
 });
-
 // --- After Login ---
 function afterLogin(){
     document.getElementById('loginDiv').classList.add('hidden');
