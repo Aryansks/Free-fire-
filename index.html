@@ -157,7 +157,9 @@ function populateCompanies(){
     const select=document.getElementById('companySelect');
     select.innerHTML='<option value="">--Select Company--</option>';
     Object.keys(COMPANIES).forEach(c=>{
-        const opt=document.createElement('option'); opt.value=c; opt.innerText=c;
+        const opt=document.createElement('option'); 
+        opt.value=c; 
+        opt.innerText=c;
         select.appendChild(opt);
     });
 }
@@ -167,6 +169,7 @@ function renderModels(){
     const modelList=document.getElementById('modelList');
     modelList.innerHTML='';
     if(!company) return;
+
     COMPANIES[company].forEach(model=>{
         const btn=document.createElement('button');
         btn.innerText=model+' - BUY NOW';
@@ -195,9 +198,11 @@ function sendBuyRequest(){
     localStorage.setItem('requests',JSON.stringify(requests));
     alert('Request sent!');
     backHome();
+    populateRequests();
+    if(currentUser.dev) populateDevRequests();
 }
 
-// ------------------- Requests & Announcements -------------------
+// ------------------- User Requests -------------------
 function populateRequests(){
     const div=document.getElementById('reqList'); div.innerHTML='';
     const userReq=requests.filter(r=>r.user===currentUser.name);
@@ -209,22 +214,41 @@ function populateRequests(){
     });
 }
 
+// ------------------- Announcements -------------------
 function populateAnnouncements(){
     const div=document.getElementById('announcements');
     div.innerHTML='';
     if(announcements.length===0){div.innerText='No announcements'; return;}
-    announcements.forEach(a=>{
-        const d=document.createElement('div'); d.className='card'; d.innerText=a;
+    announcements.forEach((a,i)=>{
+        const d=document.createElement('div'); d.className='card';
+        d.innerHTML=`📢 ${a} ${currentUser.dev ? '<button onclick="deleteAnnouncement('+i+')">Delete</button>':''}`;
         div.appendChild(d);
     });
 }
 
-// ------------------- Developer Panel -------------------
+function sendAnnouncement(){
+    const text=document.getElementById('announcementText').value.trim();
+    if(!text){alert('Type announcement'); return;}
+    announcements.push(text);
+    localStorage.setItem('announcements',JSON.stringify(announcements));
+    populateAnnouncements();
+    document.getElementById('announcementText').value='';
+}
+
+function deleteAnnouncement(index){
+    if(confirm('Delete this announcement?')){
+        announcements.splice(index,1);
+        localStorage.setItem('announcements',JSON.stringify(announcements));
+        populateAnnouncements();
+    }
+}
+
+// ------------------- Developer Requests -------------------
 function populateDevRequests(){
     const div=document.getElementById('devReqList');
     div.innerHTML='';
     const pending=requests.filter(r=>r.status==='Pending');
-    if(pending.length===0){div.innerText='No requests'; return;}
+    if(pending.length===0){div.innerText='No pending requests'; return;}
     pending.forEach((r,i)=>{
         const d=document.createElement('div'); d.className='card';
         d.innerHTML=`${r.user}: ${r.company} - ${r.model} <br>UID: ${r.uid}<br>
@@ -238,24 +262,40 @@ function acceptRequest(index){
     requests[index].status='Accepted';
     localStorage.setItem('requests',JSON.stringify(requests));
     populateDevRequests();
+    populateRequests();
 }
 
 function declineRequest(index){
     requests[index].status='Declined';
     localStorage.setItem('requests',JSON.stringify(requests));
     populateDevRequests();
+    populateRequests();
 }
 
-// ------------------- Announcements -------------------
-function sendAnnouncement(){
-    const text=document.getElementById('announcementText').value.trim();
-    if(!text){alert('Type announcement'); return;}
-    announcements.push(text);
-    localStorage.setItem('announcements',JSON.stringify(announcements));
-    populateAnnouncements();
-    document.getElementById('announcementText').value='';
+// ------------------- Navigation -------------------
+function backHome(){
+    ['sensiDiv','requestsDiv','buyFormDiv','cartDiv'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+    document.getElementById('homeDiv').classList.remove('hidden');
 }
 
-</script>
-</body>
-</html>
+function showSensi(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('sensiDiv').classList.remove('hidden');
+}
+
+function showRequests(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('requestsDiv').classList.remove('hidden');
+    populateRequests();
+}
+
+function openCart(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('cartDiv').classList.remove('hidden');
+    populateCart();
+}
+
+function cartContinue(){
+    if(cart.length===0){alert('Cart is empty'); return;}
+    alert('Continue to Buy Now form');
+}
