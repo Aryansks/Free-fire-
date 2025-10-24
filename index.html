@@ -5,18 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FF Max Sensi</title>
 <style>
-body{margin:0;background:#000;color:#fff;font-family:Arial,sans-serif;transition:0.3s;}
-header{display:flex;justify-content:space-between;padding:10px;background:#0a0a0a;border-bottom:3px solid red;}
-button{padding:10px 20px;margin:5px;font-size:16px;background:red;color:#fff;border:none;border-radius:6px;cursor:pointer;transition:0.3s;}
-button:hover{transform:scale(1.05);}
+/* ----- Base Styles ----- */
+body{margin:0;font-family:Arial,sans-serif;background:#000;color:#fff;transition:0.3s;}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#0a0a0a;border-bottom:3px solid red;position:sticky;top:0;z-index:10;}
+button{padding:10px 20px;margin:5px;font-size:16px;background:red;color:#fff;border:none;border-radius:8px;cursor:pointer;transition:0.3s;}
+button:hover{transform:scale(1.05);background:#ff1a1a;}
 .hidden{display:none;}
 .container{padding:20px;transition:0.3s;}
-h1,h2,h3{color:red;}
-.card{background:#111;padding:15px;margin:10px 0;border-radius:8px;border:1px solid #222;transition:0.3s;}
-.card:hover{transform:scale(1.02);}
-select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;background:#111;color:#fff;width:100%;}
+h1,h2,h3{color:red;margin:5px 0;}
+.card{background:#111;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #222;transition:0.3s;cursor:pointer;overflow:hidden;}
+.card:hover{transform:scale(1.02);box-shadow:0 0 10px red;}
+select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;background:#111;color:#fff;width:100%;margin:5px 0;}
 .animated{animation:pulse 2s infinite;}
 @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
+/* ----- Request status colors ----- */
+.req-pending{color:yellow;}
+.req-accepted{color:limegreen;}
+.req-declined{color:red;}
+/* ----- Responsive ----- */
+@media(max-width:600px){
+button{width:100%;margin:5px 0;}
+.card{font-size:14px;padding:10px;}
+}
+.scrollable{max-height:200px;overflow-y:auto;padding-right:5px;}
 </style>
 </head>
 <body>
@@ -38,7 +49,7 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 <!-- Home -->
 <div class="container hidden" id="homeDiv">
 <h1>Welcome <span id="uname"></span></h1>
-<div id="announcements"></div>
+<div id="announcements" class="scrollable"></div>
 <button id="sensiBtn" onclick="showSensi()">SENSI</button>
 <button id="requestsBtn" onclick="showRequests()">REQUESTS</button>
 </div>
@@ -54,16 +65,16 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 <!-- Requests -->
 <div class="container hidden" id="requestsDiv">
 <h2>My Requests</h2>
-<div id="reqList">No requests yet</div>
+<div id="reqList" class="scrollable">No requests yet</div>
 <button onclick="backHome()">Back</button>
 </div>
 
 <!-- Buy Now / Form -->
 <div class="container hidden" id="buyFormDiv">
 <h2>Buy Now - Fill Form</h2>
-<input type="text" id="buyName" placeholder="First Name"><br><br>
-<input type="text" id="buyLast" placeholder="Last Name"><br><br>
-<input type="text" id="buyUID" placeholder="In-Game UID"><br><br>
+<input type="text" id="buyName" placeholder="First Name"><br>
+<input type="text" id="buyLast" placeholder="Last Name"><br>
+<input type="text" id="buyUID" placeholder="In-Game UID"><br>
 <button onclick="sendBuyRequest()">Send Request</button>
 <button onclick="backHome()">Cancel</button>
 </div>
@@ -71,7 +82,7 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 <!-- Cart -->
 <div class="container hidden" id="cartDiv">
 <h2>Cart</h2>
-<div id="cartList">Cart is empty</div>
+<div id="cartList" class="scrollable">Cart is empty</div>
 <button onclick="cartContinue()">Continue</button>
 <button onclick="backHome()">Back</button>
 </div>
@@ -80,11 +91,11 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 <div class="container hidden" id="devDiv">
 <h2>Developer Panel</h2>
 <h3>User Requests</h3>
-<div id="devReqList">No requests yet</div>
+<div id="devReqList" class="scrollable">No requests yet</div>
 <h3>Manage Announcements</h3>
 <textarea id="announcementText" placeholder="Type announcement..." style="width:100%;height:60px;"></textarea><br>
 <button onclick="sendAnnouncement()">Send Announcement</button>
-<div id="devAnnList"></div>
+<div id="devAnnList" class="scrollable"></div>
 </div>
 
 <script>
@@ -153,17 +164,14 @@ function afterLogin(){
     }
 }
 
-// Check session on load
+// -------------------------
+// SESSION CHECK
+// -------------------------
 window.onload=function(){
     const user=JSON.parse(localStorage.getItem('user'));
     if(user){currentUser=user; afterLogin();}
 };
-
-// LOGOUT
-function logout(){
-    localStorage.removeItem('user');
-    location.reload();
-}
+function logout(){localStorage.removeItem('user');location.reload();}
 
 // -------------------------
 // NAVIGATION
@@ -191,14 +199,14 @@ function renderModels(){
   modelList.innerHTML='';
   if(!company) return;
   COMPANIES[company].forEach(model=>{
-    const div=document.createElement('div'); div.className='card';
+    const div=document.createElement('div'); div.className='card animated';
     div.innerHTML=`${model} <br><button onclick="buyNow('${company}','${model}')">Buy Now</button>`;
     modelList.appendChild(div);
   });
 }
 
 // -------------------------
-// BUY NOW FORM
+// BUY NOW
 // -------------------------
 let selectedCompany='',selectedModel='';
 function buyNow(company,model){
@@ -223,7 +231,7 @@ function sendBuyRequest(){
 }
 
 // -------------------------
-// REQUESTS FOR USER
+// USER REQUESTS
 // -------------------------
 function populateRequests(){
     if(currentUser.dev) return;
@@ -233,27 +241,11 @@ function populateRequests(){
     list.innerHTML='';
     userReqs.forEach(r=>{
         const div=document.createElement('div'); div.className='card';
-        div.innerHTML=`${r.company} - ${r.model} | Status: ${r.status}`;
+        let statusClass=r.status==='Pending'?'req-pending':r.status==='Accepted'?'req-accepted':'req-declined';
+        div.innerHTML=`${r.company} - ${r.model} | <span class="${statusClass}">Status: ${r.status}</span>`;
         list.appendChild(div);
     });
 }
-
-// -------------------------
-// CART
-// -------------------------
-function openCart(){
-    document.getElementById('homeDiv').classList.add('hidden');
-    document.getElementById('cartDiv').classList.remove('hidden');
-    const cartDiv=document.getElementById('cartList');
-    if(cart.length===0){cartDiv.innerHTML='Cart is empty'; return;}
-    cartDiv.innerHTML='';
-    cart.forEach(c=>{
-        const div=document.createElement('div'); div.className='card';
-        div.innerHTML=`${c.company} - ${c.model}`;
-        cartDiv.appendChild(div);
-    });
-}
-function cartContinue(){alert('Continue to fill form in Buy Now section');}
 
 // -------------------------
 // DEVELOPER REQUESTS
@@ -279,7 +271,7 @@ function declineRequest(i){requests[i].status='Declined';localStorage.setItem('r
 // ANNOUNCEMENTS
 // -------------------------
 function populateAnnouncements(){
-    if(currentUser.dev) return; // only users
+    if(currentUser.dev) return;
     const div=document.getElementById('announcements');
     div.innerHTML='';
     announcements.forEach(a=>{
@@ -288,4 +280,23 @@ function populateAnnouncements(){
     });
 }
 function sendAnnouncement(){
-    const text=document.getElementById('
+    const text=document.getElementById('announcementText').value.trim();
+    if(!text){alert('Type announcement'); return;}
+    announcements.push(text);
+    localStorage.setItem('announcements',JSON.stringify(announcements));
+    document.getElementById('announcementText').value='';
+    populateDevAnnouncements();
+}
+function populateDevAnnouncements(){
+    const div=document.getElementById('devAnnList');
+    div.innerHTML='';
+    announcements.forEach((a,i)=>{
+        const d=document.createElement('div'); d.className='card';
+        d.innerHTML=`${a} <button onclick="deleteAnnouncement(${i})">Delete</button>`;
+        div.appendChild(d);
+    });
+}
+function deleteAnnouncement(i){announcements.splice(i,1);localStorage.setItem('announcements',JSON.stringify(announcements));populateDevAnnouncements();populateAnnouncements();}
+</script>
+</body>
+</html>
