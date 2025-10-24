@@ -19,7 +19,7 @@ h1,h2,h3{color:red;}
 .req-accepted{color:limegreen;}
 .req-declined{color:red;}
 input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;border:none;background:#222;color:#fff;}
-.model-buttons{display:flex;gap:10px;flex-wrap:wrap;}
+.model-buttons{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
 </style>
 </head>
 <body>
@@ -97,6 +97,7 @@ let requests=JSON.parse(localStorage.getItem('requests'))||[];
 let announcements=JSON.parse(localStorage.getItem('announcements'))||[];
 let cart=[];
 
+// Companies + models
 const COMPANIES={
 "Xiaomi":["Redmi Note 13 Pro 📱","Redmi Note 13 Pro+ 🔥","Mi 12 🌀","Mi 11 ⚡","Poco X6 Pro 🎯","Redmi 12C","Redmi 11 Prime","Redmi K60 Ultra"],
 "iPhone":["iPhone 16e 🍏","iPhone 15 Pro 🌟","iPhone 15","iPhone 14 Pro","iPhone 14","iPhone 13","iPhone 12 Mini","iPhone SE 3"],
@@ -106,7 +107,14 @@ const COMPANIES={
 "Realme":["Realme GT3","Realme 12 Pro","Realme 11i","Realme Narzo 60x"],
 "Vivo":["Vivo X100 Pro","Vivo V29","Vivo Y36","Vivo Y22"],
 "OnePlus":["OnePlus 12","OnePlus 11R","OnePlus Nord 3","OnePlus 10T"],
-"Huawei":["Huawei P60 Pro","Huawei Mate 60","Huawei Nova 12","Huawei Y9a"]
+"Huawei":["Huawei P60 Pro","Huawei Mate 60","Huawei Nova 12","Huawei Y9a"],
+"Motorola":["Moto Edge 40","Moto G73","Moto G72","Moto X40"],
+"LG":["LG Velvet 2","LG Wing 5G","LG V70","LG K62"],
+"Nokia":["Nokia X30","Nokia G60","Nokia 5710","Nokia XR20"],
+"Sony":["Sony Xperia 1 V","Sony Xperia 5 IV","Sony Xperia 10 IV","Sony Xperia L4"],
+"Asus":["Asus ROG Phone 7","Asus Zenfone 10","Asus Zenfone 9","Asus ROG Phone 6"],
+"Honor":["Honor Magic 5","Honor 90","Honor X9a","Honor 80"],
+"Realme":["Realme GT3","Realme 12 Pro","Realme 11i","Realme Narzo 60x"]
 };
 
 // Login
@@ -149,6 +157,7 @@ function afterLogin(){
         document.getElementById('sensiBtn').style.display='none';
         document.getElementById('requestsBtn').style.display='none';
         populateDevRequests();
+        renderDevAnnouncements();
     } else {
         document.getElementById('devDiv').classList.add('hidden');
         document.getElementById('sensiBtn').style.display='inline-block';
@@ -156,175 +165,26 @@ function afterLogin(){
     }
 }
 
+// Logout
 function logout(){localStorage.removeItem('user'); location.reload();}
 
+// Back Home
 function backHome(){
     ['sensiDiv','requestsDiv','buyFormDiv','cartDiv'].forEach(id=>document.getElementById(id).classList.add('hidden'));
     document.getElementById('homeDiv').classList.remove('hidden');
 }
 
-function showSensi(){
-    document.getElementById('homeDiv').classList.add('hidden');
-    document.getElementById('sensiDiv').classList.remove('hidden');
-}
+// Show Sensi / Requests
+function showSensi(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('sensiDiv').classList.remove('hidden');}
+function showRequests(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('requestsDiv').classList.remove('hidden');}
 
-function showRequests(){
-    document.getElementById('homeDiv').classList.add('hidden');
-    document.getElementById('requestsDiv').classList.remove('hidden');
-}
-
+// Populate Companies
 function populateCompanies(){
     const select=document.getElementById('companySelect');
     select.innerHTML='<option value="">--Select Company--</option>';
     Object.keys(COMPANIES).forEach(c=>{
-        const opt=document.createElement('option');
-        opt.value=c; opt.innerText=c; select.appendChild(opt);
+        const opt=document.createElement('option'); opt.value=c; opt.innerText=c; select.appendChild(opt);
     });
 }
 
-function renderModels(){
-    const company=document.getElementById('companySelect').value;
-    const modelList=document.getElementById('modelList');
-    modelList.innerHTML='';
-    if(!company) return;
-    COMPANIES[company].forEach(model=>{
-        const div=document.createElement('div'); div.style.margin='5px 0';
-        div.className='model-buttons';
-        const buyBtn=document.createElement('button');
-        buyBtn.innerText='BUY NOW';
-        buyBtn.onclick=()=>buyNow(model,company);
-        const cartBtn=document.createElement('button');
-        cartBtn.innerText='ADD TO CART';
-        cartBtn.onclick=()=>addToCart(model,company);
-        const lbl=document.createElement('span'); lbl.innerText=model; lbl.style.marginRight='10px';
-        div.appendChild(lbl); div.appendChild(buyBtn); div.appendChild(cartBtn);
-        modelList.appendChild(div);
-    });
-}
-
-function buyNow(model,company){
-    document.getElementById('sensiDiv').classList.add('hidden');
-    document.getElementById('buyFormDiv').classList.remove('hidden');
-    document.getElementById('buyFormDiv').dataset.model=model;
-    document.getElementById('buyFormDiv').dataset.company=company;
-}
-
-function addToCart(model,company){
-    cart.push({model,company});
-    alert('Added to cart!');
-}
-
-function openCart(){
-    document.getElementById('homeDiv').classList.add('hidden');
-    document.getElementById('cartDiv').classList.remove('hidden');
-    const div=document.getElementById('cartItems'); div.innerHTML='';
-    if(cart.length===0){div.innerText='No items in cart'; return;}
-    cart.forEach((item,i)=>{
-        const d=document.createElement('div'); d.className='card';
-        d.innerHTML=`${item.company} - ${item.model} <button onclick="removeCart(${i})">Remove</button>`;
-        div.appendChild(d);
-    });
-}
-
-function removeCart(index){cart.splice(index,1); openCart();}
-
-function continueCart(){
-    if(cart.length===0){alert('Cart is empty'); return;}
-    document.getElementById('cartDiv').classList.add('hidden');
-    document.getElementById('buyFormDiv').classList.remove('hidden');
-}
-
-function sendBuyRequest(){
-    const fname=document.getElementById('buyName').value.trim();
-    const lname=document.getElementById('buyLast').value.trim();
-    const uid=document.getElementById('buyUID').value.trim();
-    const model=document.getElementById('buyFormDiv').dataset.model||cart.map(c=>c.model).join(', ');
-    const company=document.getElementById('buyFormDiv').dataset.company||cart.map(c=>c.company).join(', ');
-    if(!fname||!lname||!uid){alert('Fill all fields'); return;}
-    const sensi=randomSensi();
-    const req={user:currentUser.name,company,model,uid,status:'Pending',sensitivity:sensi};
-    requests.push(req);
-    localStorage.setItem('requests',JSON.stringify(requests));
-    populateRequests();
-    populateDevRequests();
-    cart=[]; // clear cart
-    alert('Request sent!');
-    backHome();
-}
-
-function populateRequests(){
-    const div=document.getElementById('reqList'); div.innerHTML='';
-    const userReq=requests.filter(r=>r.user===currentUser.name);
-    if(userReq.length===0){div.innerText='No requests yet'; return;}
-    userReq.forEach(r=>{
-        const d=document.createElement('div'); d.className='card';
-        let sensiText='';
-        if(r.status==='Accepted' && r.sensitivity){
-            sensiText = `<br>⚙️ Sensitivity:<br>
-            General: ${r.sensitivity.general}<br>
-            Red Dot: ${r.sensitivity.redDot}<br>
-            2x Scope: ${r.sensitivity.twoX}<br>
-            3x Scope: ${r.sensitivity.threeX}<br>
-            4x Scope: ${r.sensitivity.fourX}<br>
-            AWM Scope: ${r.sensitivity.awm}`;
-        }
-        d.innerHTML=`${r.company} - ${r.model}<br>UID: ${r.uid}<br>Status: <span class="req-${r.status.toLowerCase()}">${r.status}</span>${sensiText}`;
-        div.appendChild(d);
-    });
-}
-
-function populateAnnouncements(){
-    const div=document.getElementById('announcements');
-    div.innerHTML='';
-    if(announcements.length===0){div.innerText='No announcements'; return;}
-    announcements.forEach((a,i)=>{
-        const d=document.createElement('div'); d.className='card';
-        d.innerHTML=`📢 ${a}`;
-        div.appendChild(d);
-    });
-}
-
-function sendAnnouncement(){
-    const text=document.getElementById('announcementText').value.trim();
-    if(!text){alert('Type announcement'); return;}
-    announcements.push(text);
-    localStorage.setItem('announcements',JSON.stringify(announcements));
-    populateAnnouncements();
-    document.getElementById('announcementText').value='';
-}
-
-function populateDevRequests(){
-    const div=document.getElementById('devReqList');
-    div.innerHTML='';
-    const pending=requests.filter(r=>r.status==='Pending');
-    if(pending.length===0){div.innerText='No pending requests'; return;}
-    pending.forEach((r,i)=>{
-        const d=document.createElement('div'); d.className='card';
-        d.innerHTML=`${r.user}: ${r.company} - ${r.model} <br>UID: ${r.uid} <br>
-        <button onclick="acceptRequest('${r.user}','${r.company}','${r.model}','${r.uid}')">Accept</button>
-        <button onclick="declineRequest('${r.user}','${r.company}','${r.model}','${r.uid}')">Decline</button>`;
-        div.appendChild(d);
-    });
-}
-
-function acceptRequest(user,company,model,uid){
-    const index=requests.findIndex(r=>r.user===user && r.company===company && r.model===model && r.uid===uid && r.status==='Pending');
-    if(index>=0){requests[index].status='Accepted';requests[index].sensitivity=randomSensi();}
-    localStorage.setItem('requests',JSON.stringify(requests));
-    populateRequests(); populateDevRequests();
-}
-
-function declineRequest(user,company,model,uid){
-    const index=requests.findIndex(r=>r.user===user && r.company===company && r.model===model && r.uid===uid && r.status==='Pending');
-    if(index>=0){requests[index].status='Declined';}
-    localStorage.setItem('requests',JSON.stringify(requests));
-    populateRequests(); populateDevRequests();
-}
-
-function randomSensi(){
-    return {general:getRandom(),redDot:getRandom(),twoX:getRandom(),threeX:getRandom(),fourX:getRandom(),awm:getRandom()};
-}
-function getRandom(){return Math.floor(Math.random()*191)+10;}
-</script>
-</body>
-</html>
+//
