@@ -12,14 +12,12 @@ button:hover{background:#ff4d4d;transform:scale(1.05);}
 .hidden{display:none;}
 .container{padding:20px;}
 h1,h2,h3{color:red;}
-.card{background:#111;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #222;transition:0.2s;}
-.card:hover{background:#1a1a1a;}
 .scrollable{max-height:200px;overflow-y:auto;padding-right:5px;}
 .req-pending{color:yellow;}
 .req-accepted{color:limegreen;}
 .req-declined{color:red;}
 input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;border:none;background:#222;color:#fff;}
-.model-buttons{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.model-buttons{display:flex;gap:10px;flex-wrap:wrap;}
 </style>
 </head>
 <body>
@@ -116,69 +114,59 @@ const COMPANIES={
 "Honor":["Honor Magic 5","Honor 90","Honor X9a","Honor 80"]
 };
 
-// --- Login ---
-function showLogin(){
-document.getElementById('welcomeDiv').classList.add('hidden');
-document.getElementById('loginDiv').classList.remove('hidden');
-}
-
+// --- Login & One-time login ---
 window.onload=function(){
-const loginBtn=document.getElementById('loginBtn');
-loginBtn.addEventListener('click',function(){
-const uname=document.getElementById('loginUser').value.trim();
-if(!uname){alert('Enter username');return;}
-if(uname.toUpperCase()==='DEV999'){
-const code=prompt('Enter developer password:');
-if(code!=='999'){alert('Wrong password');return;}
-currentUser={name:'DEV999',dev:true};
-}else{
-currentUser={name:uname,dev:false};
-}
-localStorage.setItem('user',JSON.stringify(currentUser));
-afterLogin();
-});
-const user=JSON.parse(localStorage.getItem('user'));
-if(user){currentUser=user;afterLogin();}
+    const storedUser=JSON.parse(localStorage.getItem('user'));
+    if(storedUser){ currentUser=storedUser; afterLogin(); return; }
+    document.getElementById('loginBtn').addEventListener('click', function(){
+        const uname=document.getElementById('loginUser').value.trim();
+        if(!uname){alert('Enter username');return;}
+        if(uname.toUpperCase()==='DEV999'){
+            const code=prompt('Enter developer password:');
+            if(code!=='999'){alert('Wrong password');return;}
+            currentUser={name:'DEV999',dev:true};
+        } else { currentUser={name:uname,dev:false}; }
+        localStorage.setItem('user',JSON.stringify(currentUser));
+        afterLogin();
+    });
 };
 
 // --- After Login ---
 function afterLogin(){
-document.getElementById('loginDiv').classList.add('hidden');
-document.getElementById('homeDiv').classList.remove('hidden');
-document.getElementById('logoutBtn').classList.remove('hidden');
-document.getElementById('cartBtn').classList.remove('hidden');
-document.getElementById('uname').innerText=currentUser.name;
-document.getElementById('headerUser').innerText=currentUser.dev?'Developer':'User';
-populateAnnouncements();
-populateRequests();
-populateCompanies();
-if(currentUser.dev){
-document.getElementById('devDiv').classList.remove('hidden');
-document.getElementById('sensiBtn').style.display='none';
-document.getElementById('requestsBtn').style.display='none';
-populateDevRequests();
-renderDevAnnouncements();
-}else{
-document.getElementById('devDiv').classList.add('hidden');
-document.getElementById('sensiBtn').style.display='inline-block';
-document.getElementById('requestsBtn').style.display='inline-block';
+    document.getElementById('loginDiv').classList.add('hidden');
+    document.getElementById('homeDiv').classList.remove('hidden');
+    document.getElementById('logoutBtn').classList.remove('hidden');
+    document.getElementById('cartBtn').classList.remove('hidden');
+    document.getElementById('uname').innerText=currentUser.name;
+    document.getElementById('headerUser').innerText=currentUser.dev?'Developer':'User';
+    populateAnnouncements();
+    populateRequests();
+    populateCompanies();
+    if(currentUser.dev){
+        document.getElementById('devDiv').classList.remove('hidden');
+        document.getElementById('sensiBtn').style.display='none';
+        document.getElementById('requestsBtn').style.display='none';
+        populateDevRequests();
+        renderDevAnnouncements();
+    } else {
+        document.getElementById('devDiv').classList.add('hidden');
+        document.getElementById('sensiBtn').style.display='inline-block';
+        document.getElementById('requestsBtn').style.display='inline-block';
+    }
 }
 
-// Additional functions: renderModels(), addToCart(), buyNow(), openCart(), continueCart(), sendBuyRequest(), sendAnnouncement(), populateRequests(), populateDevRequests(), acceptRequest(), declineRequest(), etc. should be implemented here
-}
-function logout(){localStorage.removeItem('user'); location.reload();}
-function backHome(){
-['sensiDiv','requestsDiv','buyFormDiv','cartDiv'].forEach(id=>document.getElementById(id).classList.add('hidden'));
-document.getElementById('homeDiv').classList.remove('hidden');
-}
+// --- Helper functions ---
+function logout(){ localStorage.removeItem('user'); location.reload(); }
+function showLogin(){document.getElementById('welcomeDiv').classList.add('hidden');document.getElementById('loginDiv').classList.remove('hidden');}
+function backHome(){['sensiDiv','requestsDiv','buyFormDiv','cartDiv'].forEach(id=>document.getElementById(id).classList.add('hidden'));document.getElementById('homeDiv').classList.remove('hidden');}
 function showSensi(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('sensiDiv').classList.remove('hidden');}
 function showRequests(){document.getElementById('homeDiv').classList.add('hidden');document.getElementById('requestsDiv').classList.remove('hidden');}
 function populateCompanies(){
-const select=document.getElementById('companySelect');
-select.innerHTML='<option value="">--Select Company--</option>';
-Object.keys(COMPANIES).forEach(c=>{
-const opt=document.createElement('option'); opt.value=c; opt.innerText=c; select.appendChild(opt);
-});
+    const select=document.getElementById('companySelect');
+    select.innerHTML='<option value="">--Select Company--</option>';
+    Object.keys(COMPANIES).forEach(c=>{
+        const opt=document.createElement('option'); opt.value=c; opt.innerText=c; select.appendChild(opt);
+    });
 }
 </script>
 
