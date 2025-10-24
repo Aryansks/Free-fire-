@@ -6,12 +6,12 @@
 <title>🔥 Free Fire Sensi Hub</title>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#0b0f1a;color:#fff;}
-header{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#0a0a0a;border-bottom:3px solid #1a73e8;position:sticky;top:0;z-index:100;}
-button{padding:10px 20px;margin:5px;font-size:16px;background:#1a73e8;color:#fff;border:none;border-radius:8px;cursor:pointer;transition:0.2s;}
-button:hover{background:#4da1ff;transform:scale(1.05);}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#0a0a0a;border-bottom:3px solid red;position:sticky;top:0;z-index:100;}
+button{padding:10px 20px;margin:5px;font-size:16px;background:red;color:#fff;border:none;border-radius:8px;cursor:pointer;transition:0.2s;}
+button:hover{background:#ff4d4d;transform:scale(1.05);}
 .hidden{display:none;}
 .container{padding:20px;}
-h1,h2,h3{color:#1a73e8;}
+h1,h2,h3{color:red;}
 .card{background:#111;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #222;transition:0.2s;}
 .card:hover{background:#1a1a1a;}
 .scrollable{max-height:200px;overflow-y:auto;padding-right:5px;}
@@ -19,6 +19,7 @@ h1,h2,h3{color:#1a73e8;}
 .req-accepted{color:limegreen;}
 .req-declined{color:red;}
 input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;border:none;background:#222;color:#fff;}
+.model-buttons{display:flex;gap:10px;flex-wrap:wrap;}
 </style>
 </head>
 <body>
@@ -31,20 +32,17 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 </div>
 </header>
 
-<!-- Welcome Screen -->
 <div class="container" id="welcomeDiv">
 <h1>🔥 Free Fire Sensi Hub</h1>
 <button onclick="showLogin()">LOGIN</button>
 </div>
 
-<!-- Login -->
 <div class="container hidden" id="loginDiv">
 <h1>Login</h1>
 <input type="text" id="loginUser" placeholder="Enter username">
 <button id="loginBtn">Login</button>
 </div>
 
-<!-- User Home -->
 <div class="container hidden" id="homeDiv">
 <h1>Welcome <span id="uname"></span></h1>
 <div id="announcements" class="scrollable"></div>
@@ -52,7 +50,6 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 <button id="requestsBtn" onclick="showRequests()">REQUESTS</button>
 </div>
 
-<!-- SENSI -->
 <div class="container hidden" id="sensiDiv">
 <h2>Select Company & Model</h2>
 <select id="companySelect" onchange="renderModels()"></select>
@@ -60,14 +57,12 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 <button onclick="backHome()">Back</button>
 </div>
 
-<!-- User Requests -->
 <div class="container hidden" id="requestsDiv">
 <h2>My Requests</h2>
 <div id="reqList" class="scrollable">No requests yet</div>
 <button onclick="backHome()">Back</button>
 </div>
 
-<!-- Cart -->
 <div class="container hidden" id="cartDiv">
 <h2>🛒 My Cart</h2>
 <div id="cartItems" class="scrollable">No items in cart</div>
@@ -75,7 +70,6 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 <button onclick="backHome()">Back</button>
 </div>
 
-<!-- Buy Form -->
 <div class="container hidden" id="buyFormDiv">
 <h2>Fill Form</h2>
 <input type="text" id="buyName" placeholder="First Name"><br>
@@ -85,7 +79,6 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 <button onclick="backHome()">Cancel</button>
 </div>
 
-<!-- Developer Panel -->
 <div class="container hidden" id="devDiv">
 <h2>Developer Panel</h2>
 <button onclick="logout()">Logout</button>
@@ -98,7 +91,7 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 </div>
 
 <script>
-// ------------------- Data -------------------
+// Data
 let currentUser=null;
 let requests=JSON.parse(localStorage.getItem('requests'))||[];
 let announcements=JSON.parse(localStorage.getItem('announcements'))||[];
@@ -108,10 +101,15 @@ const COMPANIES={
 "Xiaomi":["Redmi Note 13 Pro 📱","Redmi Note 13 Pro+ 🔥","Mi 12 🌀","Mi 11 ⚡","Poco X6 Pro 🎯","Redmi 12C","Redmi 11 Prime","Redmi K60 Ultra"],
 "iPhone":["iPhone 16e 🍏","iPhone 15 Pro 🌟","iPhone 15","iPhone 14 Pro","iPhone 14","iPhone 13","iPhone 12 Mini","iPhone SE 3"],
 "Samsung":["Galaxy S24 Ultra 💎","Galaxy S23 Ultra","Galaxy S23+","Galaxy S23","Galaxy A54","Galaxy A14","Galaxy Z Fold5","Galaxy Z Flip5"],
-"Nothing":["Nothing Phone 1 🔵","Nothing Phone 1T 🌟","Nothing Phone 2 🟡","Nothing Phone 2T ⚡","Nothing Phone 3 Pro 🌀","Nothing Phone 3a 🌟","Nothing Phone 4 🟢","Nothing Phone 4a 🔴"]
+"Nothing":["Nothing Phone 1 🔵","Nothing Phone 1T 🌟","Nothing Phone 2 🟡","Nothing Phone 2T ⚡","Nothing Phone 3 Pro 🌀","Nothing Phone 3a 🌟","Nothing Phone 4 🟢","Nothing Phone 4a 🔴"],
+"Oppo":["Oppo Reno 10 Pro","Oppo F23","Oppo A77","Oppo Find X6"],
+"Realme":["Realme GT3","Realme 12 Pro","Realme 11i","Realme Narzo 60x"],
+"Vivo":["Vivo X100 Pro","Vivo V29","Vivo Y36","Vivo Y22"],
+"OnePlus":["OnePlus 12","OnePlus 11R","OnePlus Nord 3","OnePlus 10T"],
+"Huawei":["Huawei P60 Pro","Huawei Mate 60","Huawei Nova 12","Huawei Y9a"]
 };
 
-// ------------------- Login -------------------
+// Login
 function showLogin(){
     document.getElementById('welcomeDiv').classList.add('hidden');
     document.getElementById('loginDiv').classList.remove('hidden');
@@ -136,7 +134,6 @@ window.onload = function(){
     if(user){currentUser=user; afterLogin();}
 };
 
-// ------------------- Functions -------------------
 function afterLogin(){
     document.getElementById('loginDiv').classList.add('hidden');
     document.getElementById('homeDiv').classList.remove('hidden');
@@ -192,13 +189,15 @@ function renderModels(){
     if(!company) return;
     COMPANIES[company].forEach(model=>{
         const div=document.createElement('div'); div.style.margin='5px 0';
+        div.className='model-buttons';
         const buyBtn=document.createElement('button');
-        buyBtn.innerText=model+' - BUY NOW';
+        buyBtn.innerText='BUY NOW';
         buyBtn.onclick=()=>buyNow(model,company);
         const cartBtn=document.createElement('button');
-        cartBtn.innerText=model+' - ADD TO CART';
+        cartBtn.innerText='ADD TO CART';
         cartBtn.onclick=()=>addToCart(model,company);
-        div.appendChild(buyBtn); div.appendChild(cartBtn);
+        const lbl=document.createElement('span'); lbl.innerText=model; lbl.style.marginRight='10px';
+        div.appendChild(lbl); div.appendChild(buyBtn); div.appendChild(cartBtn);
         modelList.appendChild(div);
     });
 }
@@ -302,24 +301,24 @@ function populateDevRequests(){
     pending.forEach((r,i)=>{
         const d=document.createElement('div'); d.className='card';
         d.innerHTML=`${r.user}: ${r.company} - ${r.model} <br>UID: ${r.uid} <br>
-        <button onclick="acceptRequest(${i})">Accept</button>
-        <button onclick="declineRequest(${i})">Decline</button>`;
+        <button onclick="acceptRequest('${r.user}','${r.company}','${r.model}','${r.uid}')">Accept</button>
+        <button onclick="declineRequest('${r.user}','${r.company}','${r.model}','${r.uid}')">Decline</button>`;
         div.appendChild(d);
     });
 }
 
-function acceptRequest(index){
-    requests[index].status='Accepted';
+function acceptRequest(user,company,model,uid){
+    const index=requests.findIndex(r=>r.user===user && r.company===company && r.model===model && r.uid===uid && r.status==='Pending');
+    if(index>=0){requests[index].status='Accepted';requests[index].sensitivity=randomSensi();}
     localStorage.setItem('requests',JSON.stringify(requests));
-    populateRequests(); 
-    populateDevRequests(); // removed from dev panel immediately
+    populateRequests(); populateDevRequests();
 }
 
-function declineRequest(index){
-    requests[index].status='Declined';
+function declineRequest(user,company,model,uid){
+    const index=requests.findIndex(r=>r.user===user && r.company===company && r.model===model && r.uid===uid && r.status==='Pending');
+    if(index>=0){requests[index].status='Declined';}
     localStorage.setItem('requests',JSON.stringify(requests));
-    populateRequests(); 
-    populateDevRequests(); // removed from dev panel immediately
+    populateRequests(); populateDevRequests();
 }
 
 function randomSensi(){
