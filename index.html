@@ -7,12 +7,13 @@
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#000;color:#fff;}
 header{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#0a0a0a;border-bottom:3px solid red;position:sticky;top:0;}
-button{padding:10px 20px;margin:5px;font-size:16px;background:red;color:#fff;border:none;border-radius:8px;cursor:pointer;}
+button{padding:10px 20px;margin:5px;font-size:16px;background:red;color:#fff;border:none;border-radius:8px;cursor:pointer;transition:0.2s;}
 button:hover{background:#ff1a1a;transform:scale(1.05);}
 .hidden{display:none;}
 .container{padding:20px;}
 h1,h2,h3{color:red;}
-.card{background:#111;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #222;}
+.card{background:#111;padding:15px;margin:10px 0;border-radius:10px;border:1px solid #222;transition:0.2s;}
+.card:hover{background:#1a1a1a;}
 .scrollable{max-height:200px;overflow-y:auto;padding-right:5px;}
 .req-pending{color:yellow;}
 .req-accepted{color:limegreen;}
@@ -138,6 +139,8 @@ function afterLogin(){
         document.getElementById('devDiv').classList.remove('hidden');
         document.getElementById('sensiBtn').style.display='none';
         document.getElementById('requestsBtn').style.display='none';
+        populateDevRequests();
+        populateDevAnnouncements();
     } else {
         document.getElementById('devDiv').classList.add('hidden');
         document.getElementById('sensiBtn').style.display='inline-block';
@@ -158,9 +161,7 @@ function populateCompanies(){
     select.innerHTML='<option value="">--Select Company--</option>';
     Object.keys(COMPANIES).forEach(c=>{
         const opt=document.createElement('option'); 
-        opt.value=c; 
-        opt.innerText=c;
-        select.appendChild(opt);
+        opt.value=c; opt.innerText=c; select.appendChild(opt);
     });
 }
 
@@ -169,7 +170,6 @@ function renderModels(){
     const modelList=document.getElementById('modelList');
     modelList.innerHTML='';
     if(!company) return;
-
     COMPANIES[company].forEach(model=>{
         const btn=document.createElement('button');
         btn.innerText=model+' - BUY NOW';
@@ -202,7 +202,7 @@ function sendBuyRequest(){
     if(currentUser.dev) populateDevRequests();
 }
 
-// ------------------- User Requests -------------------
+// ------------------- Requests & Announcements -------------------
 function populateRequests(){
     const div=document.getElementById('reqList'); div.innerHTML='';
     const userReq=requests.filter(r=>r.user===currentUser.name);
@@ -214,7 +214,6 @@ function populateRequests(){
     });
 }
 
-// ------------------- Announcements -------------------
 function populateAnnouncements(){
     const div=document.getElementById('announcements');
     div.innerHTML='';
@@ -243,7 +242,7 @@ function deleteAnnouncement(index){
     }
 }
 
-// ------------------- Developer Requests -------------------
+// ------------------- Developer Panel -------------------
 function populateDevRequests(){
     const div=document.getElementById('devReqList');
     div.innerHTML='';
@@ -299,3 +298,6 @@ function cartContinue(){
     if(cart.length===0){alert('Cart is empty'); return;}
     alert('Continue to Buy Now form');
 }
+</script>
+</body>
+</html>
