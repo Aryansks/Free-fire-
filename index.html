@@ -59,14 +59,6 @@ select,input,textarea{padding:8px;border-radius:6px;border:1px solid #222;backgr
 <button onclick="backHome()">Back</button>
 </div>
 
-<!-- Cart -->
-<div class="container hidden" id="cartDiv">
-<h2>Cart</h2>
-<div id="cartList">Cart is empty</div>
-<button onclick="cartContinue()">Continue</button>
-<button onclick="backHome()">Back</button>
-</div>
-
 <!-- Buy Now / Form -->
 <div class="container hidden" id="buyFormDiv">
 <h2>Buy Now - Fill Form</h2>
@@ -101,4 +93,189 @@ const COMPANIES={
 "Tecno":["Tecno Phantom X 🔥","Tecno Camon 20","Tecno Camon 19","Tecno Camon 18","Tecno Spark 10","Tecno Spark 9","Tecno Spark 8","Tecno Pova 5","Tecno Pova 3","Tecno Pova 2","Tecno Spark 7","Tecno Spark 6","Tecno Camon 17","Tecno Camon 16","Tecno Camon 15","Tecno Phantom X Pro","Tecno Phantom 12","Tecno Phantom 11","Tecno Spark 5","Tecno Spark 4"],
 "Huawei":["Huawei P60 Pro 🌌","Huawei Mate 50","Huawei Mate 40 Pro","Huawei P50 Pro","Huawei Mate 30 Pro","Huawei P40 Pro","Huawei Nova 10","Huawei Nova 9","Huawei Y9a","Huawei Y7a","Huawei P Smart 2021","Huawei MatePad 11","Huawei MediaPad T5","Huawei MatePad Pro","Huawei P30 Pro","Huawei P20 Pro","Huawei Mate 20 Pro","Huawei Mate 10 Pro","Huawei Y6p","Huawei Y5p"],
 "Asus ROG Phone":["ROG Phone 7 ⚡","ROG Phone 6D","ROG Phone 6","ROG Phone 5","ROG Phone 3","ROG Phone 2","ROG Phone 1","ROG Phone 2 Pro","ROG Phone 5 Ultimate","ROG Phone 5s","ROG Phone 6 Pro","ROG Phone 6 Ultimate","ROG Phone 7 Ultimate","ROG Phone 7 Pro","ROG Phone 3s","ROG Phone 2s","ROG Phone 1 Pro","ROG Phone Max","ROG Phone Turbo","ROG Phone GT"],
-"Nothing":["Nothing 3a 🛸","Nothing 2 💫
+"Nothing":["Nothing 3a 🛸","Nothing 2 💫","Nothing 1","Nothing 3","Nothing Phone 2","Nothing Phone 1","Nothing 5G","Nothing X","Nothing Nova","Nothing Max","Nothing Plus","Nothing Lite","Nothing Ultra","Nothing X Pro","Nothing X Plus","Nothing SE","Nothing 4G","Nothing 3 Pro","Nothing 3 Lite","Nothing Mini"]
+};
+
+// Global variables
+let currentUser = null;
+let cart = [];
+let requests = JSON.parse(localStorage.getItem('requests')) || [];
+let announcements = JSON.parse(localStorage.getItem('announcements')) || [];
+
+// Populate company dropdown
+function populateCompanies(){
+    const companySelect = document.getElementById('companySelect');
+    companySelect.innerHTML = '<option value="">Select Company</option>';
+    Object.keys(COMPANIES).forEach(c=>{
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.innerText = c;
+        companySelect.appendChild(opt);
+    });
+}
+
+// Render models of selected company
+function renderModels(){
+    const company = document.getElementById('companySelect').value;
+    const modelList = document.getElementById('modelList');
+    modelList.innerHTML = '';
+    if(!company) return;
+    COMPANIES[company].forEach(model=>{
+        const div = document.createElement('div');
+        div.className='card';
+        div.innerHTML = `${model} <br><button onclick="buyNow('${company}','${model}')">Buy Now</button>`;
+        modelList.appendChild(div);
+    });
+}
+
+// Login function
+function login(){
+    const user = document.getElementById('loginUser').value.trim();
+    if(!user){ alert('Enter username'); return;}
+    currentUser = user;
+    afterLogin();
+}
+
+// After login
+function afterLogin(){
+    document.getElementById('loginDiv').classList.add('hidden');
+    document.getElementById('homeDiv').classList.remove('hidden');
+    document.getElementById('headerUser').innerText = currentUser;
+    document.getElementById('logoutBtn').classList.remove('hidden');
+    document.getElementById('cartBtn').classList.remove('hidden');
+    populateCompanies();
+    renderAnnouncements();
+
+    // Developer panel
+    if(currentUser.toUpperCase()==='DEV999'){
+        document.getElementById('devDiv').classList.remove('hidden');
+    }
+}
+
+// Logout
+function logout(){
+    currentUser=null;
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('loginDiv').classList.remove('hidden');
+    document.getElementById('devDiv').classList.add('hidden');
+}
+
+// Show SENSI
+function showSensi(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('sensiDiv').classList.remove('hidden');
+}
+
+// Back to home
+function backHome(){
+    document.getElementById('sensiDiv').classList.add('hidden');
+    document.getElementById('buyFormDiv').classList.add('hidden');
+    document.getElementById('requestsDiv').classList.add('hidden');
+    document.getElementById('cartDiv').classList.add('hidden');
+    document.getElementById('homeDiv').classList.remove('hidden');
+}
+
+// Buy Now
+let currentBuy = null;
+function buyNow(company,model){
+    currentBuy={company,model};
+    document.getElementById('sensiDiv').classList.add('hidden');
+    document.getElementById('buyFormDiv').classList.remove('hidden');
+}
+
+// Send Buy Request
+function sendBuyRequest(){
+    const first = document.getElementById('buyName').value.trim();
+    const last = document.getElementById('buyLast').value.trim();
+    const uid = document.getElementById('buyUID').value.trim();
+    if(!first || !last || !uid){ alert('Fill all fields'); return; }
+
+    const req = {user:currentUser,company:currentBuy.company,model:currentBuy.model,first,last,uid,status:'Pending'};
+    requests.push(req);
+    localStorage.setItem('requests',JSON.stringify(requests));
+    alert('Request sent!');
+    document.getElementById('buyName').value='';
+    document.getElementById('buyLast').value='';
+    document.getElementById('buyUID').value='';
+    backHome();
+}
+
+// Show requests for user
+function showRequests(){
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('requestsDiv').classList.remove('hidden');
+    renderRequests();
+}
+
+function renderRequests(){
+    const reqDiv = document.getElementById('reqList');
+    const userReqs = requests.filter(r=>r.user===currentUser);
+    if(!userReqs.length){ reqDiv.innerText='No requests yet'; return;}
+    reqDiv.innerHTML='';
+    userReqs.forEach(r=>{
+        const d = document.createElement('div');
+        d.className='card';
+        d.innerHTML=`${r.company} - ${r.model} | Status: ${r.status}`;
+        reqDiv.appendChild(d);
+    });
+}
+
+// Developer panel: render requests
+function renderDevRequests(){
+    const devDiv = document.getElementById('devReqList');
+    const pending = requests.filter(r=>r.status==='Pending');
+    if(!pending.length){ devDiv.innerText='No requests'; return;}
+    devDiv.innerHTML='';
+    pending.forEach((r,i)=>{
+        const d = document.createElement('div');
+        d.className='card';
+        d.innerHTML=`${r.user} | ${r.company} - ${r.model} <br>
+        <button onclick="acceptRequest(${i})">Accept</button>
+        <button onclick="rejectRequest(${i})">Reject</button>`;
+        devDiv.appendChild(d);
+    });
+}
+
+// Accept / Reject
+function acceptRequest(idx){
+    requests[idx].status='Accepted';
+    localStorage.setItem('requests',JSON.stringify(requests));
+    renderDevRequests();
+}
+function rejectRequest(idx){
+    requests[idx].status='Declined';
+    localStorage.setItem('requests',JSON.stringify(requests));
+    renderDevRequests();
+}
+
+// Announcements
+function sendAnnouncement(){
+    const msg = document.getElementById('announcementText').value.trim();
+    if(!msg){ alert('Type a message'); return;}
+    announcements.push({msg,date:new Date().toLocaleString()});
+    localStorage.setItem('announcements',JSON.stringify(announcements));
+    document.getElementById('announcementText').value='';
+    renderAnnouncements();
+}
+
+// Show announcements
+function renderAnnouncements(){
+    const annDiv = document.getElementById('announcements');
+    if(!announcements.length){ annDiv.innerHTML=''; return;}
+    annDiv.innerHTML='<h3>Announcements</h3>';
+    announcements.forEach(a=>{
+        const d=document.createElement('div');
+        d.className='card';
+        d.innerHTML=`${a.date} - ${a.msg}`;
+        annDiv.appendChild(d);
+    });
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded',()=>{
+    populateCompanies();
+    if(currentUser && currentUser.toUpperCase()==='DEV999') renderDevRequests();
+});
+</script>
+</body>
+</html>
