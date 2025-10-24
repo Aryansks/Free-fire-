@@ -96,7 +96,6 @@ let requests=JSON.parse(localStorage.getItem('requests'))||[];
 let announcements=JSON.parse(localStorage.getItem('announcements'))||[];
 let cart=[];
 
-// Companies + Models
 const COMPANIES={
 "Xiaomi":["Redmi Note 13 Pro 📱","Redmi Note 13 Pro+ 🔥","Mi 12 🌀","Mi 11 ⚡","Poco X6 Pro 🎯","Redmi 12C","Redmi 11 Prime","Redmi K60 Ultra"],
 "iPhone":["iPhone 16e 🍏","iPhone 15 Pro 🌟","iPhone 15","iPhone 14 Pro","iPhone 14","iPhone 13","iPhone 12 Mini","iPhone SE 3"],
@@ -115,23 +114,24 @@ const COMPANIES={
 "Honor":["Honor Magic 5","Honor 90","Honor X9a","Honor 80"]
 };
 
-// --- Login & One-time login ---
+// --- Login ---
 window.addEventListener('DOMContentLoaded', function() {
-    const loginBtn = document.getElementById('loginBtn');
-    loginBtn.addEventListener('click', function() {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    if(storedUser){ currentUser = storedUser; afterLogin(); }
+    populateCompanies();
+    document.getElementById('loginBtn').addEventListener('click', function(){
         const uname = document.getElementById('loginUser').value.trim();
         if(!uname){ alert('Enter username'); return; }
         if(uname.toUpperCase() === 'DEV999'){
             const code = prompt('Enter developer password:');
             if(code !== '999'){ alert('Wrong password'); return; }
             currentUser = {name:'DEV999', dev:true};
-        } else {
-            currentUser = {name:uname, dev:false};
-        }
+        } else { currentUser = {name:uname, dev:false}; }
         localStorage.setItem('user', JSON.stringify(currentUser));
         afterLogin();
     });
 });
+
 // --- After Login ---
 function afterLogin(){
     document.getElementById('loginDiv').classList.add('hidden');
@@ -154,74 +154,75 @@ function afterLogin(){
         document.getElementById('sensiBtn').style.display='inline-block';
         document.getElementById('requestsBtn').style.display='inline-block';
     }
-}
+}// --- Variables ---
+let selectedCompany = '';
+let selectedModel = '';
 
-// --- Populate companies in SENSI ---
+// --- Populate Phone Companies ---
 function populateCompanies(){
-    const select = document.getElementById('companySelect');
-    select.innerHTML = '<option value="">--Select Company--</option>';
-    Object.keys(COMPANIES).forEach(c=>{
+    const companySelect = document.getElementById('companySelect');
+    companySelect.innerHTML = '<option value="">Select Company</option>';
+    for(const comp in COMPANIES){
         const opt = document.createElement('option');
-        opt.value = c;
-        opt.innerText = c;
-        select.appendChild(opt);
-    });
+        opt.value = comp;
+        opt.textContent = comp;
+        companySelect.appendChild(opt);
+    }
 }
 
-// --- Render models after company selected ---
+// --- Render Models ---
 function renderModels(){
-    const sel = document.getElementById('companySelect');
-    const modelsDiv = document.getElementById('modelList');
-    modelsDiv.innerHTML = '';
-    const models = COMPANIES[sel.value]||[];
-    models.forEach(m=>{
-        const btn = document.createElement('button');
-        btn.innerText = m;
-        btn.onclick = ()=>{ openBuyForm(sel.value,m); };
-        modelsDiv.appendChild(btn);
-    });
+    selectedCompany = document.getElementById('companySelect').value;
+    const modelList = document.getElementById('modelList');
+    modelList.innerHTML = '';
+    if(selectedCompany && COMPANIES[selectedCompany]){
+        COMPANIES[selectedCompany].forEach(model=>{
+            const btn = document.createElement('button');
+            btn.textContent = model;
+            btn.onclick = () => { selectedModel = model; openBuyForm(); };
+            modelList.appendChild(btn);
+        });
+    }
 }
 
-// --- Show Buy Form ---
-let selectedCompany='', selectedModel='';
-function openBuyForm(company,model){
-    selectedCompany=company;
-    selectedModel=model;
+// --- Open Buy Now Form ---
+function openBuyForm(){
+    if(!selectedModel){ alert('Select model first'); return; }
     document.getElementById('sensiDiv').classList.add('hidden');
     document.getElementById('buyFormDiv').classList.remove('hidden');
 }
 
 // --- Send Buy Request ---
 function sendBuyRequest(){
-    const fname=document.getElementById('buyName').value.trim();
-    const lname=document.getElementById('buyLast').value.trim();
-    const uid=document.getElementById('buyUID').value.trim();
-    if(!fname||!lname||!uid){ alert('Fill all fields'); return; }
+    const fname = document.getElementById('buyName').value.trim();
+    const lname = document.getElementById('buyLast').value.trim();
+    const uid = document.getElementById('buyUID').value.trim();
+    if(!fname || !lname || !uid){ alert('Fill all fields'); return; }
     const req = {
-        id:Date.now(),
-        user:currentUser.name,
+        user: currentUser.name,
+        dev:false,
         company:selectedCompany,
         model:selectedModel,
-        fname,fname,lname,uid,
-        status:'Pending'
+        fname,lname,uid,
+        status:'Pending',
+        date:new Date().toLocaleString()
     };
     requests.push(req);
-    localStorage.setItem('requests',JSON.stringify(requests));
+    localStorage.setItem('requests', JSON.stringify(requests));
     alert('Request sent!');
     document.getElementById('buyFormDiv').classList.add('hidden');
     backHome();
     populateRequests();
-    if(currentUser.dev===false) populateRequests();
-    if(currentUser.dev===true) populateDevRequests();
+    populateDevRequests();
 }
 
-// --- Back Home ---
+// --- Back to Home ---
 function backHome(){
     document.getElementById('sensiDiv').classList.add('hidden');
     document.getElementById('requestsDiv').classList.add('hidden');
+    document.getElementById('cartDiv').classList.add('hidden');
     document.getElementById('buyFormDiv').classList.add('hidden');
     document.getElementById('homeDiv').classList.remove('hidden');
-    document.getElementById('cartDiv').classList.add('hidden');
 }
 
 // --- Show SENSI ---
@@ -237,112 +238,124 @@ function showRequests(){
     populateRequests();
 }
 
-// --- Populate User Requests ---
+// --- Populate Requests for User ---
 function populateRequests(){
-    const div = document.getElementById('reqList');
-    div.innerHTML='';
-    requests.filter(r=>r.user===currentUser.name).forEach(r=>{
-        const d = document.createElement('div');
-        d.classList.add('card');
-        d.innerHTML=`${r.company} - ${r.model} <br>Status: <span class="req-${r.status.toLowerCase()}">${r.status}</span>`;
-        div.appendChild(d);
+    if(!currentUser || currentUser.dev) return;
+    const reqDiv = document.getElementById('reqList');
+    const userReqs = requests.filter(r=>r.user===currentUser.name);
+    if(userReqs.length===0){ reqDiv.innerHTML='No requests yet'; return; }
+    reqDiv.innerHTML = '';
+    userReqs.forEach(r=>{
+        const div = document.createElement('div');
+        div.className='card';
+        div.innerHTML = `<b>${r.company} - ${r.model}</b><br>Status: 
+        <span class="${r.status==='Pending'?'req-pending':r.status==='Accepted'?'req-accepted':'req-declined'}">${r.status}</span><br>
+        ${r.status==='Accepted'?`SENSI: ${Math.floor(Math.random()*190)+10}`:''}`;
+        reqDiv.appendChild(div);
     });
 }
 
-// --- Developer Requests ---
+// --- Populate Developer Requests ---
 function populateDevRequests(){
-    const div=document.getElementById('devReqList');
-    div.innerHTML='';
-    requests.filter(r=>r.status==='Pending').forEach(r=>{
-        const d=document.createElement('div');
-        d.classList.add('card');
-        d.innerHTML=`${r.user} requested ${r.company} - ${r.model} <br>
-        <button onclick="devAccept(${r.id})">Accept</button>
-        <button onclick="devDecline(${r.id})">Decline</button>`;
-        div.appendChild(d);
+    if(!currentUser || !currentUser.dev) return;
+    const devReqDiv = document.getElementById('devReqList');
+    const devReqs = requests.filter(r=>r.status==='Pending');
+    if(devReqs.length===0){ devReqDiv.innerHTML='No requests yet'; return; }
+    devReqDiv.innerHTML='';
+    devReqs.forEach((r,i)=>{
+        const div = document.createElement('div');
+        div.className='card';
+        div.innerHTML = `<b>${r.user}</b> | ${r.company} - ${r.model}<br>
+        <button onclick="devAccept(${i})">Accept</button>
+        <button onclick="devDecline(${i})">Decline</button>`;
+        devReqDiv.appendChild(div);
     });
 }
 
-// --- Developer Accept ---
-function devAccept(id){
-    const r=requests.find(x=>x.id===id);
-    if(r){ r.status='Accepted'; localStorage.setItem('requests',JSON.stringify(requests)); }
+// --- Developer Accept / Decline ---
+function devAccept(index){
+    requests[index].status='Accepted';
+    localStorage.setItem('requests', JSON.stringify(requests));
     populateDevRequests();
     populateRequests();
 }
-
-// --- Developer Decline ---
-function devDecline(id){
-    const r=requests.find(x=>x.id===id);
-    if(r){ r.status='Declined'; localStorage.setItem('requests',JSON.stringify(requests)); }
+function devDecline(index){
+    requests[index].status='Declined';
+    localStorage.setItem('requests', JSON.stringify(requests));
     populateDevRequests();
     populateRequests();
 }
 
 // --- Announcements ---
 function populateAnnouncements(){
-    const div=document.getElementById('announcements');
+    const div = document.getElementById('announcements');
     div.innerHTML='';
+    if(announcements.length===0){ div.textContent='No announcements yet'; return; }
     announcements.forEach(a=>{
-        const d=document.createElement('div');
-        d.classList.add('card');
-        d.innerText=a.text;
+        const d = document.createElement('div');
+        d.className='card';
+        d.textContent=a;
         div.appendChild(d);
     });
 }
-
+function sendAnnouncement(){
+    const text = document.getElementById('announcementText').value.trim();
+    if(!text){ alert('Enter message'); return; }
+    announcements.push(text);
+    localStorage.setItem('announcements', JSON.stringify(announcements));
+    renderDevAnnouncements();
+    populateAnnouncements();
+    document.getElementById('announcementText').value='';
+}
 function renderDevAnnouncements(){
-    const div=document.getElementById('devAnnList');
+    const div = document.getElementById('devAnnList');
     div.innerHTML='';
     announcements.forEach((a,i)=>{
-        const d=document.createElement('div');
-        d.classList.add('card');
-        d.innerHTML=`${a.text} <button onclick="deleteAnnouncement(${i})">Delete</button>`;
+        const d = document.createElement('div');
+        d.className='card';
+        d.innerHTML=`${a} <button onclick="deleteAnnouncement(${i})">Delete</button>`;
         div.appendChild(d);
     });
 }
-
-function sendAnnouncement(){
-    const txt=document.getElementById('announcementText').value.trim();
-    if(!txt){ alert('Enter text'); return; }
-    announcements.push({text:txt});
-    localStorage.setItem('announcements',JSON.stringify(announcements));
-    document.getElementById('announcementText').value='';
-    renderDevAnnouncements();
-    populateAnnouncements();
-}
-
 function deleteAnnouncement(i){
     announcements.splice(i,1);
-    localStorage.setItem('announcements',JSON.stringify(announcements));
+    localStorage.setItem('announcements', JSON.stringify(announcements));
     renderDevAnnouncements();
     populateAnnouncements();
 }
 
-// --- Cart Functions ---
+// --- Cart (simple) ---
 function openCart(){
     document.getElementById('homeDiv').classList.add('hidden');
     document.getElementById('cartDiv').classList.remove('hidden');
-    const div=document.getElementById('cartItems');
+    const div = document.getElementById('cartItems');
+    if(cart.length===0){ div.textContent='No items in cart'; return; }
     div.innerHTML='';
-    cart.forEach((c,i)=>{
-        const d=document.createElement('div');
-        d.classList.add('card');
-        d.innerText=`${c.company} - ${c.model}`;
+    cart.forEach(item=>{
+        const d = document.createElement('div');
+        d.className='card';
+        d.textContent=`${item.company} - ${item.model}`;
         div.appendChild(d);
     });
 }
-
-function continueCart(){
-    alert('Continue clicked - implement form here if needed');
-}
+function continueCart(){ alert('Continue to fill form'); }
 
 // --- Logout ---
 function logout(){
     localStorage.removeItem('user');
-    location.reload();
+    currentUser=null;
+    document.getElementById('loginDiv').classList.remove('hidden');
+    document.getElementById('homeDiv').classList.add('hidden');
+    document.getElementById('devDiv').classList.add('hidden');
+    document.getElementById('logoutBtn').classList.add('hidden');
+    document.getElementById('cartBtn').classList.add('hidden');
 }
 
+// --- Show login panel ---
+function showLogin(){
+    document.getElementById('welcomeDiv').classList.add('hidden');
+    document.getElementById('loginDiv').classList.remove('hidden');
+}
 </script>
 </body>
 </html>
