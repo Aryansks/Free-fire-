@@ -107,14 +107,25 @@ const db = firebase.database();
 
 // One-Time Login
 let currentUser=null, selectedCompany='', selectedModel='', cart=[];
-window.onload=function(){
-    const savedUser=localStorage.getItem('ffSensiUser');
-    if(savedUser){currentUser=savedUser; showUserPanel();}
+let currentUser = null, selectedCompany = '', selectedModel = '', cart = [];
+
+// --- One-Time Login Check ---
+window.onload = function() {
+    const savedUser = localStorage.getItem('ffSensiUser');
+    if(savedUser){
+        currentUser = savedUser;
+        showUserPanel(); // Automatically show the correct panel
+    } else {
+        document.getElementById('welcomeDiv').classList.remove('hidden');
+        document.getElementById('loginDiv').classList.add('hidden');
+        document.getElementById('homeDiv').classList.add('hidden');
+        document.getElementById('devDiv').classList.add('hidden');
+    }
     populateCompanies();
     fetchUserRequests();
     fetchDevRequests();
     fetchAnnouncements();
-}
+};
 
 function showLogin(){document.getElementById('welcomeDiv').classList.add('hidden');document.getElementById('loginDiv').classList.remove('hidden');}
 function login(){const uname=document.getElementById('loginUser').value.trim(); if(!uname){alert('Enter username'); return;} currentUser=uname; localStorage.setItem('ffSensiUser',currentUser); showUserPanel();}
