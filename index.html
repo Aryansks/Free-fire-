@@ -92,216 +92,236 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 </div>
 
 <script>
-// Firebase Config
+// --- Firebase configuration ---
 const firebaseConfig = {
-    apiKey: "AIzaSyDYwUTHildowbImBqOHgIPM0pp0EVdd2UQ",
-    authDomain: "free-fire-sensi-c7674.firebaseapp.com",
-    databaseURL: "https://free-fire-sensi-c7674-default-rtdb.firebaseio.com",
-    projectId: "free-fire-sensi-c7674",
-    storageBucket: "free-fire-sensi-c7674.firebasestorage.app",
-    messagingSenderId: "282496876553",
-    appId: "1:282496876553:web:37e784f17ddcf5ae0bf8d8"
+apiKey:"AIzaSyDYwUTHildowbImBqOHgIPM0pp0EVdd2UQ",
+authDomain:"free-fire-sensi-c7674.firebaseapp.com",
+databaseURL:"https://free-fire-sensi-c7674-default-rtdb.firebaseio.com",
+projectId:"free-fire-sensi-c7674",
+storageBucket:"free-fire-sensi-c7674.firebasestorage.app",
+messagingSenderId:"282496876553",
+appId:"1:282496876553:web:37e784f17ddcf5ae0bf8d8"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const db=firebase.database();
 
-// One-Time Login
+// --- Variables ---
 let currentUser=null, selectedCompany='', selectedModel='', cart=[];
-let currentUser = null, selectedCompany = '', selectedModel = '', cart = [];
 
-// --- One-Time Login Check ---
-window.onload = function() {
-    const savedUser = localStorage.getItem('ffSensiUser');
-    if(savedUser){
-        currentUser = savedUser;
-        showUserPanel(); // Automatically show the correct panel
-    } else {
-        document.getElementById('welcomeDiv').classList.remove('hidden');
-        document.getElementById('loginDiv').classList.add('hidden');
-        document.getElementById('homeDiv').classList.add('hidden');
-        document.getElementById('devDiv').classList.add('hidden');
-    }
-    populateCompanies();
-    fetchUserRequests();
-    fetchDevRequests();
-    fetchAnnouncements();
+// --- Phone Companies & Models ---
+const COMPANIES={
+"Xiaomi":["Redmi Note 13 Pro","Redmi Note 13 Pro+","Mi 12","Mi 11","Poco X6 Pro","Redmi 12C","Redmi 11 Prime","Redmi K60 Ultra"],
+"iPhone":["iPhone 16e","iPhone 15 Pro","iPhone 15","iPhone 14 Pro","iPhone 14","iPhone 13","iPhone 12 Mini","iPhone SE 3"],
+"Samsung":["Galaxy S24 Ultra","Galaxy S23 Ultra","Galaxy S23+","Galaxy S23","Galaxy A54","Galaxy A14","Galaxy Z Fold5","Galaxy Z Flip5"],
+"Nothing":["Nothing Phone 1","Nothing Phone 1T","Nothing Phone 2","Nothing Phone 2T","Nothing Phone 3 Pro","Nothing Phone 3a","Nothing Phone 4","Nothing Phone 4a"],
+"Oppo":["Oppo Reno 10 Pro","Oppo F23","Oppo A77","Oppo Find X6"],
+"Realme":["Realme GT3","Realme 12 Pro","Realme 11i","Realme Narzo 60x"],
+"Vivo":["Vivo X100 Pro","Vivo V29","Vivo Y36","Vivo Y22"],
+"OnePlus":["OnePlus 12","OnePlus 11R","OnePlus Nord 3","OnePlus 10T"],
+"Huawei":["Huawei P60 Pro","Huawei Mate 60","Huawei Nova 12","Huawei Y9a"],
+"Motorola":["Moto Edge 40","Moto G73","Moto G72","Moto X40"],
+"LG":["LG Velvet 2","LG Wing 5G","LG V70","LG K62"],
+"Nokia":["Nokia X30","Nokia G60","Nokia 5710","Nokia XR20"],
+"Sony":["Sony Xperia 1 V","Sony Xperia 5 IV","Sony Xperia 10 IV","Sony Xperia L4"],
+"Asus":["Asus ROG Phone 7","Asus Zenfone 10","Asus ROG Phone 6","Asus ROG Phone 5"]
 };
 
-function showLogin(){document.getElementById('welcomeDiv').classList.add('hidden');document.getElementById('loginDiv').classList.remove('hidden');}
-function login(){const uname=document.getElementById('loginUser').value.trim(); if(!uname){alert('Enter username'); return;} currentUser=uname; localStorage.setItem('ffSensiUser',currentUser); showUserPanel();}
-function showUserPanel(){document.getElementById('loginDiv').classList.add('hidden'); document.getElementById('homeDiv').classList.remove('hidden'); document.getElementById('headerUser').innerText=currentUser; document.getElementById('logoutBtn').classList.remove('hidden'); document.getElementById('cartBtn').classList.remove('hidden'); if(currentUser.toLowerCase()==="dev999"){document.getElementById('devDiv').classList.remove('hidden'); document.getElementById('homeDiv').classList.add('hidden');}else{document.getElementById('devDiv').classList.add('hidden'); document.getElementById('homeDiv').classList.remove('hidden');} fetchUserRequests(); fetchDevRequests(); fetchAnnouncements();}
-function logout(){currentUser=null; localStorage.removeItem('ffSensiUser'); document.getElementById('loginDiv').classList.remove('hidden'); document.getElementById('homeDiv').classList.add('hidden'); document.getElementById('devDiv').classList.add('hidden'); document.getElementById('headerUser').innerText="Not logged"; document.getElementById('logoutBtn').classList.add('hidden'); document.getElementById('cartBtn').classList.add('hidden');}
-
-// Companies & Models
-const COMPANIES={"Xiaomi":["Redmi Note 13 Pro","Redmi Note 13 Pro+","Mi 12","Mi 11","Poco X6 Pro","Redmi 12C","Redmi 11 Prime","Redmi K60 Ultra"],"iPhone":["iPhone 16e","iPhone 15 Pro","iPhone 15","iPhone 14 Pro","iPhone 14","iPhone 13","iPhone 12 Mini","iPhone SE 3"],"Samsung":["Galaxy S24 Ultra","Galaxy S23 Ultra","Galaxy S23+","Galaxy S23","Galaxy A54","Galaxy A14","Galaxy Z Fold5","Galaxy Z Flip5"],"Nothing":["Nothing Phone 1","Nothing Phone 1T","Nothing Phone 2","Nothing Phone 2T","Nothing Phone 3 Pro","Nothing Phone 3a","Nothing Phone 4","Nothing Phone 4a"],"Oppo":["Oppo Reno 10 Pro","Oppo F23","Oppo A77","Oppo Find X6"],"Realme":["Realme GT3","Realme 12 Pro","Realme 11i","Realme Narzo 60x"],"Vivo":["Vivo X100 Pro","Vivo V29","Vivo Y36","Vivo Y22"],"OnePlus":["OnePlus 12","OnePlus 11R","OnePlus Nord 3","OnePlus 10T"],"Huawei":["Huawei P60 Pro","Huawei Mate 60","Huawei Nova 12","Huawei Y9a"],"Motorola":["Moto Edge 40","Moto G73","Moto G72","Moto X40"],"LG":["LG Velvet 2","LG Wing 5G","LG V70","LG K62"],"Nokia":["Nokia X30","Nokia G60","Nokia 5710","Nokia XR20"],"Sony":["Sony Xperia 1 V","Sony Xperia 5 IV","Sony Xperia 10 IV","Sony Xperia L4"],"Asus":["Asus ROG Phone 7","Asus Zenfone 10","Asus Zenfone 9","Asus ROG Phone 6"],"Honor":["Honor Magic 5","Honor 90","Honor X9a","Honor 80"]};
-
-// Device-specific SENSI 50-200
+// --- Device Best Sensitivity ---
 const DEVICE_SENSI={};
-for(const c in COMPANIES){COMPANIES[c].forEach(m=>{DEVICE_SENSI[m]={GENERAL:Math.floor(Math.random()*150)+50,"RED DOT":Math.floor(Math.random()*150)+50,"2X":Math.floor(Math.random()*150)+50,"4X":Math.floor(Math.random()*150)+50,"SNIPER SCOPE":Math.floor(Math.random()*150)+50,"FREE CAMERA":Math.floor(Math.random()*150)+50};});}
+for(const c in COMPANIES){COMPANIES[c].forEach(m=>{
+DEVICE_SENSI[m]={GENERAL:Math.floor(Math.random()*150)+50,"RED DOT":Math.floor(Math.random()*150)+50,"2X":Math.floor(Math.random()*150)+50,"4X":Math.floor(Math.random()*150)+50,"SNIPER SCOPE":Math.floor(Math.random()*150)+50,"FREE CAMERA":Math.floor(Math.random()*150)+50};});}
 
-// --- Populate Companies ---
-function populateCompanies(){
-    const companySelect = document.getElementById('companySelect');
-    companySelect.innerHTML = '<option value="">Select Company</option>';
-    for(const c in COMPANIES){
-        const opt = document.createElement('option');
-        opt.value = c; opt.textContent = c;
-        companySelect.appendChild(opt);
+// --- One-time login ---
+window.onload=function(){
+    const savedUser=localStorage.getItem('ffSensiUser');
+    if(savedUser){currentUser=savedUser; showUserPanel();}
+    else{document.getElementById('welcomeDiv').classList.remove('hidden');}
+    populateCompanies(); fetchUserRequests(); fetchDevRequests(); fetchAnnouncements();
+};
+
+// --- Functions ---
+function populateCompanies() {
+    const select = document.getElementById('companySelect');
+    select.innerHTML = '<option value="">Select Company</option>';
+    for (let c in COMPANIES) {
+        let opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        select.appendChild(opt);
     }
 }
 
-// --- Render Models ---
-function renderModels(){
+function renderModels() {
     selectedCompany = document.getElementById('companySelect').value;
-    const modelList = document.getElementById('modelList');
-    modelList.innerHTML = '';
-    if(!selectedCompany) return;
-    COMPANIES[selectedCompany].forEach(model=>{
-        const div = document.createElement('div');
-        div.className='card';
-        div.innerHTML=`${model} <button onclick="openBuyForm('${model}')">Buy Now</button>
-        <button onclick="addToCart('${model}')">🛒 Add to Cart</button>`;
-        modelList.appendChild(div);
+    const modelDiv = document.getElementById('modelList');
+    modelDiv.innerHTML = '';
+    if (!selectedCompany) return;
+    COMPANIES[selectedCompany].forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `${m} <button onclick="openBuyForm('${m}')">BUY NOW</button>`;
+        modelDiv.appendChild(card);
     });
 }
 
-// --- Buy Form ---
-function openBuyForm(model){
+function openBuyForm(model) {
     selectedModel = model;
     document.getElementById('sensiDiv').classList.add('hidden');
     document.getElementById('buyFormDiv').classList.remove('hidden');
 }
 
-function sendBuyRequest(){
-    const fname = document.getElementById('buyName').value.trim();
-    const lname = document.getElementById('buyLast').value.trim();
+function sendBuyRequest() {
+    const first = document.getElementById('buyName').value.trim();
+    const last = document.getElementById('buyLast').value.trim();
     const uid = document.getElementById('buyUID').value.trim();
-    if(!fname || !lname || !uid){alert('Fill all fields'); return;}
+    if(!first || !last || !uid){alert('Fill all fields'); return;}
     const reqData = {
-        username: currentUser,
         device: selectedModel,
+        username: currentUser,
         status: 'PENDING',
-        general: DEVICE_SENSI[selectedModel].GENERAL,
-        redDot: DEVICE_SENSI[selectedModel]['RED DOT'],
-        x2: DEVICE_SENSI[selectedModel]['2X'],
-        x4: DEVICE_SENSI[selectedModel]['4X'],
-        sniper: DEVICE_SENSI[selectedModel]['SNIPER SCOPE'],
-        freeCam: DEVICE_SENSI[selectedModel]['FREE CAMERA']
+        GENERAL: DEVICE_SENSI[selectedModel].GENERAL,
+        REDDOT: DEVICE_SENSI[selectedModel]["RED DOT"],
+        X2: DEVICE_SENSI[selectedModel]["2X"],
+        X4: DEVICE_SENSI[selectedModel]["4X"],
+        SNIPER: DEVICE_SENSI[selectedModel]["SNIPER SCOPE"],
+        FREECAM: DEVICE_SENSI[selectedModel]["FREE CAMERA"]
     };
-    db.ref('requests').push(reqData);
-    alert('Request sent!');
-    backHome();
-}
-
-// --- Add to Cart ---
-function addToCart(model){
-    cart.push(model);
-    alert(model+' added to cart!');
-}
-
-// --- Open Cart ---
-function openCart(){
-    document.getElementById('homeDiv').classList.add('hidden');
-    document.getElementById('cartDiv').classList.remove('hidden');
-    const cartItems = document.getElementById('cartItems');
-    cartItems.innerHTML = '';
-    if(cart.length===0){cartItems.textContent='No items in cart'; return;}
-    cart.forEach(m=>{
-        const div = document.createElement('div'); div.className='card';
-        div.textContent = m;
-        cartItems.appendChild(div);
+    db.ref('requests').push(reqData, function(error){
+        if(error){alert('Error sending request');} 
+        else{alert('Request sent!'); backHome();}
     });
+    document.getElementById('buyName').value='';
+    document.getElementById('buyLast').value='';
+    document.getElementById('buyUID').value='';
 }
 
-// --- Continue Cart ---
-function continueCart(){
-    if(cart.length===0){alert('Cart empty'); return;}
-    selectedModel = cart[0]; // simple first item
-    document.getElementById('cartDiv').classList.add('hidden');
-    document.getElementById('buyFormDiv').classList.remove('hidden');
-}
-
-// --- Back Home ---
-function backHome(){
-    document.getElementById('buyFormDiv').classList.add('hidden');
-    document.getElementById('cartDiv').classList.add('hidden');
+function backHome() {
     document.getElementById('sensiDiv').classList.add('hidden');
+    document.getElementById('buyFormDiv').classList.add('hidden');
     document.getElementById('requestsDiv').classList.add('hidden');
+    document.getElementById('cartDiv').classList.add('hidden');
     document.getElementById('homeDiv').classList.remove('hidden');
 }
 
-// --- Show SENSI ---
-function showSensi(){
+function showSensi() {
     document.getElementById('homeDiv').classList.add('hidden');
     document.getElementById('sensiDiv').classList.remove('hidden');
 }
 
-// --- Show Requests ---
-function showRequests(){
+function showRequests() {
     document.getElementById('homeDiv').classList.add('hidden');
     document.getElementById('requestsDiv').classList.remove('hidden');
     fetchUserRequests();
 }
 
-// --- Fetch User Requests ---
-function fetchUserRequests(){
-    const reqList = document.getElementById('reqList');
-    reqList.innerHTML='';
-    db.ref('requests').orderByChild('username').equalTo(currentUser).on('value',snap=>{
-        reqList.innerHTML='';
-        snap.forEach(s=>{
-            const r = s.val();
-            const div = document.createElement('div'); div.className='card';
-            div.innerHTML=`Device: ${r.device}<br>Username: ${r.username}<br>Status: <span class="req-${r.status.toLowerCase()}">${r.status}</span>`;
-            if(r.status==='ACCEPTED'){
-                div.innerHTML+=`<br>GENERAL: ${r.general} | RED DOT: ${r.redDot} | 2X: ${r.x2} | 4X: ${r.x4} | SNIPER: ${r.sniper} | FREE CAM: ${r.freeCam}`;
+function fetchUserRequests() {
+    const list = document.getElementById('reqList');
+    list.innerHTML = '';
+    db.ref('requests').orderByChild('username').equalTo(currentUser).on('value', snapshot => {
+        list.innerHTML = '';
+        snapshot.forEach(s => {
+            const data = s.val();
+            const d = document.createElement('div');
+            d.className = 'card';
+            let statusColor = (data.status==='PENDING')?'req-pending':(data.status==='ACCEPTED')?'req-accepted':'req-declined';
+            d.innerHTML = `Device: ${data.device}<br>Username: ${data.username}<br>Status: <span class="${statusColor}">${data.status}</span>`;
+            if(data.status==='ACCEPTED') {
+                d.innerHTML += `<br><b>SENSI</b>: GENERAL-${data.GENERAL}, RED DOT-${data.REDDOT}, 2X-${data.X2}, 4X-${data.X4}, SNIPER-${data.SNIPER}, FREE CAM-${data.FREECAM}`;
             }
-            reqList.appendChild(div);
+            list.appendChild(d);
         });
     });
 }
 
-// --- Fetch Developer Requests ---
-function fetchDevRequests(){
+// Developer Panel
+function fetchDevRequests() {
     if(currentUser.toLowerCase()!=='dev999') return;
-    const devReqList = document.getElementById('devReqList');
-    devReqList.innerHTML='';
-    db.ref('requests').on('value',snap=>{
-        devReqList.innerHTML='';
-        snap.forEach(s=>{
-            const r = s.val(); const key = s.key;
-            const div = document.createElement('div'); div.className='card';
-            div.innerHTML=`Device: ${r.device}<br>Username: ${r.username}<br>Status: ${r.status}<br>
-            <button onclick="devAccept('${key}')">Accept</button>
-            <button onclick="devDecline('${key}')">Decline</button>`;
-            devReqList.appendChild(div);
+    const list = document.getElementById('devReqList'); list.innerHTML='';
+    db.ref('requests').on('value', snapshot => {
+        list.innerHTML='';
+        snapshot.forEach(s=>{
+            const data=s.val(); const key=s.key;
+            if(data.status==='PENDING'){
+                const d = document.createElement('div'); d.className='card';
+                d.innerHTML=`Device: ${data.device}<br>Username: ${data.username}<br>Status: ${data.status}<br>
+                <button onclick="devAccept('${key}')">Accept</button> 
+                <button onclick="devDecline('${key}')">Decline</button>`;
+                list.appendChild(d);
+            }
         });
     });
 }
+function devAccept(key) { db.ref('requests/'+key).update({status:'ACCEPTED'}); }
+function devDecline(key) { db.ref('requests/'+key).update({status:'DECLINED'}); }
 
-// --- Developer Accept/Decline ---
-function devAccept(key){db.ref('requests/'+key).update({status:'ACCEPTED'});}
-function devDecline(key){db.ref('requests/'+key).update({status:'DECLINED'}); db.ref('requests/'+key).remove();}
-
-// --- Announcements ---
-function sendAnnouncement(){
-    const msg=document.getElementById('announcementText').value.trim();
-    if(!msg){alert('Type message'); return;}
-    db.ref('announcements').push({message:msg});
+// Announcements
+function sendAnnouncement() {
+    const txt = document.getElementById('announcementText').value.trim();
+    if(!txt){alert('Enter announcement'); return;}
+    const id = db.ref('announcements').push().key;
+    db.ref('announcements/'+id).set({text:txt});
     document.getElementById('announcementText').value='';
+    fetchAnnouncements();
 }
-
-function fetchAnnouncements(){
-    const annList=document.getElementById('announcements');
-    annList.innerHTML=''; db.ref('announcements').on('value',snap=>{
-        annList.innerHTML='';
-        snap.forEach(s=>{
-            const a=s.val();
-            const div=document.createElement('div'); div.className='announcement card';
-            div.textContent=a.message;
-            annList.appendChild(div);
+function fetchAnnouncements() {
+    const div = document.getElementById('announcements');
+    div.innerHTML='';
+    db.ref('announcements').on('value', snapshot=>{
+        div.innerHTML='';
+        snapshot.forEach(s=>{
+            const d = document.createElement('div');
+            d.className = 'announcement card';
+            d.innerText = s.val().text;
+            div.appendChild(d);
+        });
+        renderDevAnnouncements();
+    });
+}
+function renderDevAnnouncements() {
+    if(currentUser.toLowerCase()!=='dev999') return;
+    const div = document.getElementById('devAnnList'); div.innerHTML='';
+    db.ref('announcements').on('value', snapshot=>{
+        div.innerHTML='';
+        snapshot.forEach(s=>{
+            const key=s.key; const val=s.val(); const d=document.createElement('div'); d.className='card';
+            d.innerHTML=`${val.text} <button onclick="deleteAnnouncement('${key}')">Delete</button>`; 
+            div.appendChild(d);
         });
     });
+}
+function deleteAnnouncement(key) { db.ref('announcements/'+key).remove(); }
+
+// Login / Logout
+function showLogin() {
+    document.getElementById('welcomeDiv').classList.add('hidden'); 
+    document.getElementById('loginDiv').classList.remove('hidden');
+}
+
+function login() {
+    const username = document.getElementById('loginUser').value.trim();
+    if(!username){alert('Enter username'); return;}
+    currentUser = username;
+    localStorage.setItem('ffSensiUser', currentUser);
+    showUserPanel();
+}
+
+function showUserPanel(){
+    document.getElementById('loginDiv').classList.add('hidden');
+    document.getElementById('welcomeDiv').classList.add('hidden');
+    if(currentUser.toLowerCase()==='dev999'){
+        document.getElementById('devDiv').classList.remove('hidden');
+        document.getElementById('headerUser').innerText='Developer';
+    }else{
+        document.getElementById('homeDiv').classList.remove('hidden');
+        document.getElementById('headerUser').innerText=currentUser;
+        document.getElementById('cartBtn').classList.remove('hidden');
+    }
+    document.getElementById('logoutBtn').classList.remove('hidden');
+}
+
+function logout(){
+    localStorage.removeItem('ffSensiUser');
+    location.reload();
 }
 </script>
 </body>
