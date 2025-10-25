@@ -3,23 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🔥 Free Fire Sensi Hub</title>
+<title>FF SENSI TOOL</title>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#0b0f1a;color:#fff;transition:0.3s;}
-header{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#0a0a0a;border-bottom:3px solid red;position:sticky;top:0;z-index:100;}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f5f5;color:#111;transition:0.3s;}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#fff;border-bottom:3px solid red;position:sticky;top:0;z-index:100;}
 button{padding:10px 20px;margin:5px;font-size:16px;background:red;color:#fff;border:none;border-radius:8px;cursor:pointer;transition:0.2s;}
 button:hover{background:#ff4d4d;transform:scale(1.05);}
 .hidden{display:none;}
-.container{padding:20px;}
+.container{padding:20px;transition:all 0.3s ease;}
 h1,h2,h3{color:red;}
-.scrollable{max-height:200px;overflow-y:auto;padding-right:5px;}
-.req-pending{color:yellow;}
-.req-accepted{color:limegreen;}
+.scrollable{max-height:200px;overflow-y:auto;padding-right:5px;background:#fff;color:#111;border-radius:8px;padding:10px;margin-bottom:10px;}
+.req-pending{color:orange;}
+.req-accepted{color:green;}
 .req-declined{color:red;}
-input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;border:none;background:#222;color:#fff;}
+input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;border:1px solid #ccc;background:#fff;color:#111;}
 .model-buttons{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
-.card{border:1px solid red;padding:10px;margin:5px;border-radius:8px;background:#111;transition:0.2s;}
-.card:hover{background:#222;}
+.card{border:1px solid red;padding:10px;margin:5px;border-radius:8px;background:#fff;transition:0.2s;}
+.card:hover{background:#ffe6e6;}
 #cartBtn{position:fixed;top:15px;right:15px;}
 .announcement{animation:fadeIn 1s;}
 @keyframes fadeIn{0%{opacity:0;}100%{opacity:1;}}
@@ -39,7 +39,7 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 </header>
 
 <div class="container" id="welcomeDiv">
-<h1>🔥 Free Fire Sensi Hub</h1>
+<h1>🔥 FF SENSI TOOL</h1>
 <button onclick="showLogin()">LOGIN</button>
 </div>
 
@@ -100,7 +100,7 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 // REPLACE THESE VALUES with your Firebase project config
 const firebaseConfig = {
   apiKey: "AIzaSyDYwUTHildowbImBqOHgIPM0pp0EVdd2UQ",
-  authDomain:"free-fire-sensi-c7674.firebaseapp.com",
+  authDomain: "free-fire-sensi-c7674.firebaseapp.com",
   databaseURL: "https://free-fire-sensi-c7674-default-rtdb.firebaseio.com",
   projectId: "free-fire-sensi-c7674",
   storageBucket: "free-fire-sensi-c7674.firebasestorage.app",
@@ -139,18 +139,27 @@ window.addEventListener('DOMContentLoaded', function(){
     const storedUser = JSON.parse(localStorage.getItem('user'));
     if(storedUser){ currentUser = storedUser; afterLogin(); }
     populateCompanies();
-    document.getElementById('loginBtn').addEventListener('click', function(){
-        const uname = document.getElementById('loginUser').value.trim();
-        if(!uname){ alert('Enter username'); return; }
-        if(uname.toUpperCase() === 'DEV999'){
-            const code = prompt('Enter developer password:');
-            if(code !== '999'){ alert('Wrong password'); return; }
-            currentUser = {name:'DEV999', dev:true};
-        } else { currentUser = {name:uname, dev:false}; }
-        localStorage.setItem('user', JSON.stringify(currentUser));
-        afterLogin();
+    
+    const loginBtn=document.getElementById('loginBtn');
+    loginBtn.addEventListener('click', loginAction);
+    
+    // Enter key login
+    document.getElementById('loginUser').addEventListener('keydown', function(e){
+        if(e.key==='Enter') loginAction();
     });
 });
+
+function loginAction(){
+    const uname = document.getElementById('loginUser').value.trim();
+    if(!uname){ alert('Enter username'); return; }
+    if(uname.toUpperCase() === 'DEV999'){
+        const code = prompt('Enter developer password:');
+        if(code !== '999'){ alert('Wrong password'); return; }
+        currentUser = {name:'DEV999', dev:true};
+    } else { currentUser = {name:uname, dev:false}; }
+    localStorage.setItem('user', JSON.stringify(currentUser));
+    afterLogin();
+}
 
 function afterLogin(){
     document.getElementById('loginDiv').classList.add('hidden');
@@ -165,122 +174,152 @@ function afterLogin(){
         document.getElementById('sensiBtn').style.display='none';
         document.getElementById('requestsBtn').style.display='none';
         populateDevRequests();
-        renderDevAnnouncements();
+  // --- Functions for SENSI, Requests, Cart, Announcements ---
+function populateCompanies(){
+    const sel=document.getElementById('companySelect');
+    sel.innerHTML='<option value="">--Select Company--</option>';
+    for(let c in COMPANIES){ sel.innerHTML += `<option value="${c}">${c}</option>`; }
+}
+
+function renderModels(){
+    selectedCompany=document.getElementById('companySelect').value;
+    const ml=document.getElementById('modelList');
+    ml.innerHTML='';
+    if(!selectedCompany) return;
+    COMPANIES[selectedCompany].forEach(model=>{
+        const div=document.createElement('div');
+        div.className='card';
+        div.innerHTML=`${model} <button onclick="openBuyForm('${model}')">BUY NOW</button>
+        <button onclick="addToCart('${model}')">🛒</button>`;
+        ml.appendChild(div);
+    });
+}
+
+function showSensi(){ document.getElementById('sensiDiv').classList.remove('hidden'); document.getElementById('homeDiv').classList.add('hidden'); }
+function showRequests(){ document.getElementById('requestsDiv').classList.remove('hidden'); document.getElementById('homeDiv').classList.add('hidden'); populateRequests(); }
+
+function backHome(){
+    document.getElementById('sensiDiv').classList.add('hidden');
+    document.getElementById('requestsDiv').classList.add('hidden');
+    document.getElementById('buyFormDiv').classList.add('hidden');
+    document.getElementById('cartDiv').classList.add('hidden');
+    if(currentUser.dev){
+        document.getElementById('devDiv').classList.remove('hidden');
     } else {
-        document.getElementById('devDiv').classList.add('hidden');
-        document.getElementById('sensiBtn').style.display='inline-block';
-        document.getElementById('requestsBtn').style.display='inline-block';
-        populateRequests();
-        populateAnnouncements();
+        document.getElementById('homeDiv').classList.remove('hidden');
     }
 }
 
-// --- FUNCTIONS ---
-function populateCompanies(){
-    const select = document.getElementById('companySelect'); 
-    if(!select) return;
-    select.innerHTML='<option value="">Select Company</option>';
-    for(const c in COMPANIES){ 
-        let o = document.createElement('option'); 
-        o.value = c; o.textContent = c; select.appendChild(o); 
-    }
+// --- Buy / Cart ---
+function openBuyForm(model){
+    selectedModel=model;
+    document.getElementById('buyFormDiv').classList.remove('hidden');
+    document.getElementById('sensiDiv').classList.add('hidden');
 }
-function renderModels(){
-    selectedCompany=document.getElementById('companySelect').value;
-    const modelList=document.getElementById('modelList'); modelList.innerHTML='';
-    if(selectedCompany && COMPANIES[selectedCompany]){
-        COMPANIES[selectedCompany].forEach(m=>{
-            let b=document.createElement('button'); b.textContent=m;
-            b.onclick=()=>{selectedModel=m; openBuyForm();}; modelList.appendChild(b);
-        });
-    }
-}
-function showSensi(){document.getElementById('homeDiv').classList.add('hidden'); document.getElementById('sensiDiv').classList.remove('hidden');}
-function showRequests(){document.getElementById('homeDiv').classList.add('hidden'); document.getElementById('requestsDiv').classList.remove('hidden');}
-function backHome(){['homeDiv','sensiDiv','requestsDiv','cartDiv','buyFormDiv'].forEach(id=>document.getElementById(id).classList.add('hidden')); document.getElementById('homeDiv').classList.remove('hidden');}
-function logout(){localStorage.removeItem('user'); location.reload();}
-function openBuyForm(){document.getElementById('sensiDiv').classList.add('hidden'); document.getElementById('buyFormDiv').classList.remove('hidden');}
+
 function sendBuyRequest(){
-    const name=document.getElementById('buyName').value.trim();
+    const first=document.getElementById('buyName').value.trim();
     const last=document.getElementById('buyLast').value.trim();
     const uid=document.getElementById('buyUID').value.trim();
-    if(!name || !last || !uid){alert('Fill all fields'); return;}
-    const req={username:currentUser.name, device:selectedModel, name, last, uid, status:'PENDING'};
+    if(!first || !last || !uid){ alert('Fill all fields'); return; }
+    const req={user:currentUser.name, device:selectedModel, firstname:first, lastname:last, uid:uid, status:'PENDING', timestamp:Date.now()};
     db.ref('requests').push(req);
     alert('Request sent!');
     backHome();
 }
 
-// --- Firebase Real-time Listeners ---
-db.ref('requests').on('value', snapshot=>{
-    const val = snapshot.val() || {};
-    const arr = Object.entries(val).map(([id,data])=>({...data,id}));
-    if(currentUser && !currentUser.dev){
-        let list=document.getElementById('reqList'); list.innerHTML='';
-        arr.filter(r=>r.username===currentUser.name).forEach(r=>{
-            let div=document.createElement('div'); div.className='card';
-            let sensiText='';
-            if(r.status==='ACCEPTED'){sensiText=`
-🎯 SENSITIVITY
-General: 130
-Red Dot: 140
-2X: 120
-4X: 150
-Sniper Scope: 160
-Free Camera: 180
-`; }
-            div.innerHTML=`📱 Device: ${r.device}<br>👤 Username: ${r.username}<br>📌 Status: ${r.status} ${sensiText}`;
-            list.appendChild(div);
-        });
-    } else if(currentUser && currentUser.dev){
-        populateDevRequests();
-    }
-});
+function addToCart(model){
+    cart.push({company:selectedCompany, model:model});
+    alert(model+' added to cart!');
+}
 
-db.ref('announcements').on('value', snapshot=>{
-    const val = snapshot.val() || {};
-    const arr = Object.entries(val).map(([id,data])=>({...data,id}));
-    const annDiv=document.getElementById('announcements');
-    if(annDiv){ annDiv.innerHTML=''; arr.forEach(a=>{ let d=document.createElement('div'); d.className='announcement'; d.textContent=a.msg; annDiv.appendChild(d);});}
-    renderDevAnnouncements();
-});
-
-function populateDevRequests(){
-    const devList=document.getElementById('devReqList'); if(!devList) return;
-    db.ref('requests').once('value', snapshot=>{
-        const val = snapshot.val() || {};
-        devList.innerHTML='';
-        Object.entries(val).forEach(([id,r])=>{
-            let div=document.createElement('div'); div.className='card';
-            div.innerHTML=`📱 ${r.device}<br>👤 ${r.username}<br>📌 Status: ${r.status}<br>
-<button onclick="devAccept('${id}')">Accept</button>
-<button onclick="devDecline('${id}')">Decline</button>`;
-            devList.appendChild(div);
+// --- Populate Requests for User ---
+function populateRequests(){
+    const reqList=document.getElementById('reqList');
+    reqList.innerHTML='';
+    db.ref('requests').orderByChild('user').equalTo(currentUser.name).on('value', snapshot=>{
+        reqList.innerHTML='';
+        snapshot.forEach(child=>{
+            const r=child.val();
+            const div=document.createElement('div');
+            div.className='card';
+            div.innerHTML=`Device: ${r.device} <br> Username: ${r.user} <br>Status: ${r.status} 
+            ${r.status==='ACCEPTED'?`<br>GENERAL: 120<br>RED DOT: 140<br>2X:130<br>4X:145<br>SNIPER SCOPE:160<br>FREE CAMERA:180` : ''}`;
+            reqList.appendChild(div);
         });
     });
 }
-function devAccept(id){db.ref('requests/'+id).update({status:'ACCEPTED'});}
-function devDecline(id){db.ref('requests/'+id).update({status:'DECLINED'});}
+
+// --- Developer Requests ---
+function populateDevRequests(){
+    const devReq=document.getElementById('devReqList');
+    devReq.innerHTML='';
+    db.ref('requests').on('value', snapshot=>{
+        devReq.innerHTML='';
+        snapshot.forEach(child=>{
+            const r=child.val();
+            const key=child.key;
+            const div=document.createElement('div');
+            div.className='card';
+            div.innerHTML=`Device: ${r.device} <br> Username: ${r.user} <br>Status: ${r.status} 
+            <button onclick="devAccept('${key}')">ACCEPT</button>
+            <button onclick="devDecline('${key}')">DECLINE</button>`;
+            devReq.appendChild(div);
+        });
+    });
+}
+
+function devAccept(key){ db.ref('requests/'+key).update({status:'ACCEPTED'}); }
+function devDecline(key){ db.ref('requests/'+key).update({status:'DECLINED'}); db.ref('requests/'+key).remove(); }
+
+// --- Announcements ---
+function populateAnnouncements(){
+    const annDiv=document.getElementById('announcements');
+    annDiv.innerHTML='';
+    db.ref('announcements').on('value', snapshot=>{
+        annDiv.innerHTML='';
+        snapshot.forEach(child=>{
+            const a=child.val();
+            const div=document.createElement('div');
+            div.className='announcement card';
+            div.innerText=a.msg;
+            annDiv.appendChild(div);
+        });
+    });
+}
+
 function sendAnnouncement(){
     const msg=document.getElementById('announcementText').value.trim();
-    if(!msg) return; db.ref('announcements').push({msg});
+    if(!msg) return;
+    db.ref('announcements').push({msg:msg});
     document.getElementById('announcementText').value='';
 }
-function renderDevAnnouncements(){
-    const list=document.getElementById('devAnnList'); if(!list) return;
-    db.ref('announcements').once('value', snapshot=>{
-        const val=snapshot.val()||{};
-        list.innerHTML='';
-        Object.entries(val).forEach(([id,a])=>{
-            let d=document.createElement('div'); d.className='card';
-            d.innerHTML=`${a.msg} <button onclick="db.ref('announcements/${id}').remove()">Delete</button>`;
-            list.appendChild(d);
-        });
+
+// --- Cart ---
+function openCart(){
+    document.getElementById('cartDiv').classList.remove('hidden');
+    document.getElementById('homeDiv').classList.add('hidden');
+    const cartItems=document.getElementById('cartItems');
+    cartItems.innerHTML='';
+    cart.forEach(item=>{
+        const div=document.createElement('div');
+        div.className='card';
+        div.innerText=item.model;
+        cartItems.appendChild(div);
     });
 }
-function openCart(){alert('Cart is not implemented yet in Firebase version');}
-function continueCart(){alert('Continue clicked');}
-</script>
 
+function continueCart(){ alert('Proceed to Buy Form'); openBuyForm(cart[0].model); }
+
+// --- Logout ---
+function logout(){
+    localStorage.removeItem('user');
+    currentUser=null;
+    location.reload();
+}
+
+// Initial announcements load
+populateAnnouncements();
+</script>
 </body>
-</html>
+</html>     
