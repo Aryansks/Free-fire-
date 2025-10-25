@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🔥 Free Fire Sensi Hub</title>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#0b0f1a;color:#fff;}
+body{margin:0;font-family:Arial,sans-serif;background:#0b0f1a;color:#fff;transition:0.3s;}
 header{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#0a0a0a;border-bottom:3px solid red;position:sticky;top:0;z-index:100;}
 button{padding:10px 20px;margin:5px;font-size:16px;background:red;color:#fff;border:none;border-radius:8px;cursor:pointer;transition:0.2s;}
 button:hover{background:#ff4d4d;transform:scale(1.05);}
@@ -18,17 +18,24 @@ h1,h2,h3{color:red;}
 .req-declined{color:red;}
 input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;border:none;background:#222;color:#fff;}
 .model-buttons{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
-.card{border:1px solid red;padding:10px;margin:5px;border-radius:8px;background:#111;}
+.card{border:1px solid red;padding:10px;margin:5px;border-radius:8px;background:#111;transition:0.2s;}
+.card:hover{background:#222;}
+#cartBtn{position:fixed;top:15px;right:15px;}
+.announcement{animation:fadeIn 1s;}
+@keyframes fadeIn{0%{opacity:0;}100%{opacity:1;}}
 </style>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
 </head>
 <body>
 
 <header>
 <div id="headerUser">Not logged</div>
-<div>
 <button id="logoutBtn" class="hidden" onclick="logout()">LOGOUT</button>
-<button id="cartBtn" class="hidden" onclick="openCart()">🛒 Cart</button>
-</div>
+<button id="cartBtn" class="hidden" onclick="openCart()">🛒</button>
 </header>
 
 <div class="container" id="welcomeDiv">
@@ -80,7 +87,6 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 
 <div class="container hidden" id="devDiv">
 <h2>Developer Panel</h2>
-<button onclick="logout()">Logout</button>
 <h3>User Requests</h3>
 <div id="devReqList" class="scrollable">No requests yet</div>
 <h3>Manage Announcements</h3>
@@ -90,13 +96,27 @@ input,select,textarea{padding:10px;margin:5px 0;width:100%;border-radius:8px;bor
 </div>
 
 <script>
-// --- Data ---
-let currentUser=null;
-let requests=JSON.parse(localStorage.getItem('requests'))||[];
-let announcements=JSON.parse(localStorage.getItem('announcements'))||[];
+// --- Firebase Config ---
+// REPLACE THESE VALUES with your Firebase project config
+const firebaseConfig = {
+  apiKey: "AIzaSyDYwUTHildowbImBqOHgIPM0pp0EVdd2UQ",
+  authDomain: "http://free-fire-sensi-c7674.firebaseapp.com",
+  databaseURL: "https://free-fire-sensi-c7674-default-rtdb.firebaseio.com",
+  projectId: "free-fire-sensi-c7674",
+  storageBucket: "free-fire-sensi-c7674.firebasestorage.app",
+  messagingSenderId: "282496876553",
+  appId: "1:282496876553:web:37e784f17ddcf5ae0bf8d8"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// --- GLOBAL VARIABLES ---
+let currentUser = null;
+let selectedCompany='', selectedModel='';
 let cart=[];
 
-const COMPANIES={
+// Phone Companies and Models
+const COMPANIES = {
 "Xiaomi":["Redmi Note 13 Pro 📱","Redmi Note 13 Pro+ 🔥","Mi 12 🌀","Mi 11 ⚡","Poco X6 Pro 🎯","Redmi 12C","Redmi 11 Prime","Redmi K60 Ultra"],
 "iPhone":["iPhone 16e 🍏","iPhone 15 Pro 🌟","iPhone 15","iPhone 14 Pro","iPhone 14","iPhone 13","iPhone 12 Mini","iPhone SE 3"],
 "Samsung":["Galaxy S24 Ultra 💎","Galaxy S23 Ultra","Galaxy S23+","Galaxy S23","Galaxy A54","Galaxy A14","Galaxy Z Fold5","Galaxy Z Flip5"],
@@ -114,8 +134,8 @@ const COMPANIES={
 "Honor":["Honor Magic 5","Honor 90","Honor X9a","Honor 80"]
 };
 
-// --- Login ---
-window.addEventListener('DOMContentLoaded', function() {
+// --- LOGIN ---
+window.addEventListener('DOMContentLoaded', function(){
     const storedUser = JSON.parse(localStorage.getItem('user'));
     if(storedUser){ currentUser = storedUser; afterLogin(); }
     populateCompanies();
@@ -132,17 +152,14 @@ window.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// --- After Login ---
 function afterLogin(){
     document.getElementById('loginDiv').classList.add('hidden');
+    document.getElementById('welcomeDiv').classList.add('hidden');
     document.getElementById('homeDiv').classList.remove('hidden');
     document.getElementById('logoutBtn').classList.remove('hidden');
     document.getElementById('cartBtn').classList.remove('hidden');
     document.getElementById('uname').innerText=currentUser.name;
     document.getElementById('headerUser').innerText=currentUser.dev?'Developer':'User';
-    populateAnnouncements();
-    populateRequests();
-    populateCompanies();
     if(currentUser.dev){
         document.getElementById('devDiv').classList.remove('hidden');
         document.getElementById('sensiBtn').style.display='none';
@@ -153,209 +170,117 @@ function afterLogin(){
         document.getElementById('devDiv').classList.add('hidden');
         document.getElementById('sensiBtn').style.display='inline-block';
         document.getElementById('requestsBtn').style.display='inline-block';
-    }
-}// --- Variables ---
-let selectedCompany = '';
-let selectedModel = '';
-
-// --- Populate Phone Companies ---
-function populateCompanies(){
-    const companySelect = document.getElementById('companySelect');
-    companySelect.innerHTML = '<option value="">Select Company</option>';
-    for(const comp in COMPANIES){
-        const opt = document.createElement('option');
-        opt.value = comp;
-        opt.textContent = comp;
-        companySelect.appendChild(opt);
+        populateRequests();
+        populateAnnouncements();
     }
 }
 
-// --- Render Models ---
+// --- FUNCTIONS ---
+function populateCompanies(){
+    const select = document.getElementById('companySelect'); 
+    if(!select) return;
+    select.innerHTML='<option value="">Select Company</option>';
+    for(const c in COMPANIES){ 
+        let o = document.createElement('option'); 
+        o.value = c; o.textContent = c; select.appendChild(o); 
+    }
+}
 function renderModels(){
-    selectedCompany = document.getElementById('companySelect').value;
-    const modelList = document.getElementById('modelList');
-    modelList.innerHTML = '';
+    selectedCompany=document.getElementById('companySelect').value;
+    const modelList=document.getElementById('modelList'); modelList.innerHTML='';
     if(selectedCompany && COMPANIES[selectedCompany]){
-        COMPANIES[selectedCompany].forEach(model=>{
-            const btn = document.createElement('button');
-            btn.textContent = model;
-            btn.onclick = () => { selectedModel = model; openBuyForm(); };
-            modelList.appendChild(btn);
+        COMPANIES[selectedCompany].forEach(m=>{
+            let b=document.createElement('button'); b.textContent=m;
+            b.onclick=()=>{selectedModel=m; openBuyForm();}; modelList.appendChild(b);
         });
     }
 }
-
-// --- Open Buy Now Form ---
-function openBuyForm(){
-    if(!selectedModel){ alert('Select model first'); return; }
-    document.getElementById('sensiDiv').classList.add('hidden');
-    document.getElementById('buyFormDiv').classList.remove('hidden');
-}
-
-// --- Send Buy Request ---
+function showSensi(){document.getElementById('homeDiv').classList.add('hidden'); document.getElementById('sensiDiv').classList.remove('hidden');}
+function showRequests(){document.getElementById('homeDiv').classList.add('hidden'); document.getElementById('requestsDiv').classList.remove('hidden');}
+function backHome(){['homeDiv','sensiDiv','requestsDiv','cartDiv','buyFormDiv'].forEach(id=>document.getElementById(id).classList.add('hidden')); document.getElementById('homeDiv').classList.remove('hidden');}
+function logout(){localStorage.removeItem('user'); location.reload();}
+function openBuyForm(){document.getElementById('sensiDiv').classList.add('hidden'); document.getElementById('buyFormDiv').classList.remove('hidden');}
 function sendBuyRequest(){
-    const fname = document.getElementById('buyName').value.trim();
-    const lname = document.getElementById('buyLast').value.trim();
-    const uid = document.getElementById('buyUID').value.trim();
-    if(!fname || !lname || !uid){ alert('Fill all fields'); return; }
-    const req = {
-        user: currentUser.name,
-        dev:false,
-        company:selectedCompany,
-        model:selectedModel,
-        fname,lname,uid,
-        status:'Pending',
-        date:new Date().toLocaleString()
-    };
-    requests.push(req);
-    localStorage.setItem('requests', JSON.stringify(requests));
+    const name=document.getElementById('buyName').value.trim();
+    const last=document.getElementById('buyLast').value.trim();
+    const uid=document.getElementById('buyUID').value.trim();
+    if(!name || !last || !uid){alert('Fill all fields'); return;}
+    const req={username:currentUser.name, device:selectedModel, name, last, uid, status:'PENDING'};
+    db.ref('requests').push(req);
     alert('Request sent!');
-    document.getElementById('buyFormDiv').classList.add('hidden');
     backHome();
-    populateRequests();
-    populateDevRequests();
 }
 
-// --- Back to Home ---
-function backHome(){
-    document.getElementById('sensiDiv').classList.add('hidden');
-    document.getElementById('requestsDiv').classList.add('hidden');
-    document.getElementById('cartDiv').classList.add('hidden');
-    document.getElementById('buyFormDiv').classList.add('hidden');
-    document.getElementById('homeDiv').classList.remove('hidden');
-}
+// --- Firebase Real-time Listeners ---
+db.ref('requests').on('value', snapshot=>{
+    const val = snapshot.val() || {};
+    const arr = Object.entries(val).map(([id,data])=>({...data,id}));
+    if(currentUser && !currentUser.dev){
+        let list=document.getElementById('reqList'); list.innerHTML='';
+        arr.filter(r=>r.username===currentUser.name).forEach(r=>{
+            let div=document.createElement('div'); div.className='card';
+            let sensiText='';
+            if(r.status==='ACCEPTED'){sensiText=`
+🎯 SENSITIVITY
+General: 130
+Red Dot: 140
+2X: 120
+4X: 150
+Sniper Scope: 160
+Free Camera: 180
+`; }
+            div.innerHTML=`📱 Device: ${r.device}<br>👤 Username: ${r.username}<br>📌 Status: ${r.status} ${sensiText}`;
+            list.appendChild(div);
+        });
+    } else if(currentUser && currentUser.dev){
+        populateDevRequests();
+    }
+});
 
-// --- Show SENSI ---
-function showSensi(){
-    document.getElementById('homeDiv').classList.add('hidden');
-    document.getElementById('sensiDiv').classList.remove('hidden');
-}
-
-// --- Show Requests ---
-function showRequests(){
-    document.getElementById('homeDiv').classList.add('hidden');
-    document.getElementById('requestsDiv').classList.remove('hidden');
-    populateRequests();
-}
-
-// --- Populate Requests for User ---
-function populateRequests(){
-    if(!currentUser || currentUser.dev) return;
-    const reqDiv = document.getElementById('reqList');
-    const userReqs = requests.filter(r=>r.user===currentUser.name);
-    if(userReqs.length===0){ reqDiv.innerHTML='No requests yet'; return; }
-    reqDiv.innerHTML = '';
-    userReqs.forEach(r=>{
-        const div = document.createElement('div');
-        div.className='card';
-        div.innerHTML = `<b>${r.company} - ${r.model}</b><br>Status: 
-        <span class="${r.status==='Pending'?'req-pending':r.status==='Accepted'?'req-accepted':'req-declined'}">${r.status}</span><br>
-        ${r.status==='Accepted'?`SENSI: ${Math.floor(Math.random()*190)+10}`:''}`;
-        reqDiv.appendChild(div);
-    });
-}
-
-// --- Populate Developer Requests ---
-function populateDevRequests(){
-    if(!currentUser || !currentUser.dev) return;
-    const devReqDiv = document.getElementById('devReqList');
-    const devReqs = requests.filter(r=>r.status==='Pending');
-    if(devReqs.length===0){ devReqDiv.innerHTML='No requests yet'; return; }
-    devReqDiv.innerHTML='';
-    devReqs.forEach((r,i)=>{
-        const div = document.createElement('div');
-        div.className='card';
-        div.innerHTML = `<b>${r.user}</b> | ${r.company} - ${r.model}<br>
-        <button onclick="devAccept(${i})">Accept</button>
-        <button onclick="devDecline(${i})">Decline</button>`;
-        devReqDiv.appendChild(div);
-    });
-}
-
-// --- Developer Accept / Decline ---
-function devAccept(index){
-    requests[index].status='Accepted';
-    localStorage.setItem('requests', JSON.stringify(requests));
-    populateDevRequests();
-    populateRequests();
-}
-function devDecline(index){
-    requests[index].status='Declined';
-    localStorage.setItem('requests', JSON.stringify(requests));
-    populateDevRequests();
-    populateRequests();
-}
-
-// --- Announcements ---
-function populateAnnouncements(){
-    const div = document.getElementById('announcements');
-    div.innerHTML='';
-    if(announcements.length===0){ div.textContent='No announcements yet'; return; }
-    announcements.forEach(a=>{
-        const d = document.createElement('div');
-        d.className='card';
-        d.textContent=a;
-        div.appendChild(d);
-    });
-}
-function sendAnnouncement(){
-    const text = document.getElementById('announcementText').value.trim();
-    if(!text){ alert('Enter message'); return; }
-    announcements.push(text);
-    localStorage.setItem('announcements', JSON.stringify(announcements));
+db.ref('announcements').on('value', snapshot=>{
+    const val = snapshot.val() || {};
+    const arr = Object.entries(val).map(([id,data])=>({...data,id}));
+    const annDiv=document.getElementById('announcements');
+    if(annDiv){ annDiv.innerHTML=''; arr.forEach(a=>{ let d=document.createElement('div'); d.className='announcement'; d.textContent=a.msg; annDiv.appendChild(d);});}
     renderDevAnnouncements();
-    populateAnnouncements();
+});
+
+function populateDevRequests(){
+    const devList=document.getElementById('devReqList'); if(!devList) return;
+    db.ref('requests').once('value', snapshot=>{
+        const val = snapshot.val() || {};
+        devList.innerHTML='';
+        Object.entries(val).forEach(([id,r])=>{
+            let div=document.createElement('div'); div.className='card';
+            div.innerHTML=`📱 ${r.device}<br>👤 ${r.username}<br>📌 Status: ${r.status}<br>
+<button onclick="devAccept('${id}')">Accept</button>
+<button onclick="devDecline('${id}')">Decline</button>`;
+            devList.appendChild(div);
+        });
+    });
+}
+function devAccept(id){db.ref('requests/'+id).update({status:'ACCEPTED'});}
+function devDecline(id){db.ref('requests/'+id).update({status:'DECLINED'});}
+function sendAnnouncement(){
+    const msg=document.getElementById('announcementText').value.trim();
+    if(!msg) return; db.ref('announcements').push({msg});
     document.getElementById('announcementText').value='';
 }
 function renderDevAnnouncements(){
-    const div = document.getElementById('devAnnList');
-    div.innerHTML='';
-    announcements.forEach((a,i)=>{
-        const d = document.createElement('div');
-        d.className='card';
-        d.innerHTML=`${a} <button onclick="deleteAnnouncement(${i})">Delete</button>`;
-        div.appendChild(d);
+    const list=document.getElementById('devAnnList'); if(!list) return;
+    db.ref('announcements').once('value', snapshot=>{
+        const val=snapshot.val()||{};
+        list.innerHTML='';
+        Object.entries(val).forEach(([id,a])=>{
+            let d=document.createElement('div'); d.className='card';
+            d.innerHTML=`${a.msg} <button onclick="db.ref('announcements/${id}').remove()">Delete</button>`;
+            list.appendChild(d);
+        });
     });
 }
-function deleteAnnouncement(i){
-    announcements.splice(i,1);
-    localStorage.setItem('announcements', JSON.stringify(announcements));
-    renderDevAnnouncements();
-    populateAnnouncements();
-}
-
-// --- Cart (simple) ---
-function openCart(){
-    document.getElementById('homeDiv').classList.add('hidden');
-    document.getElementById('cartDiv').classList.remove('hidden');
-    const div = document.getElementById('cartItems');
-    if(cart.length===0){ div.textContent='No items in cart'; return; }
-    div.innerHTML='';
-    cart.forEach(item=>{
-        const d = document.createElement('div');
-        d.className='card';
-        d.textContent=`${item.company} - ${item.model}`;
-        div.appendChild(d);
-    });
-}
-function continueCart(){ alert('Continue to fill form'); }
-
-// --- Logout ---
-function logout(){
-    localStorage.removeItem('user');
-    currentUser=null;
-    document.getElementById('loginDiv').classList.remove('hidden');
-    document.getElementById('homeDiv').classList.add('hidden');
-    document.getElementById('devDiv').classList.add('hidden');
-    document.getElementById('logoutBtn').classList.add('hidden');
-    document.getElementById('cartBtn').classList.add('hidden');
-}
-
-// --- Show login panel ---
-function showLogin(){
-    document.getElementById('welcomeDiv').classList.add('hidden');
-    document.getElementById('loginDiv').classList.remove('hidden');
-}
+function openCart(){alert('Cart is not implemented yet in Firebase version');}
+function continueCart(){alert('Continue clicked');}
 </script>
+
 </body>
 </html>
