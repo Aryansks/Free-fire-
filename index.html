@@ -264,16 +264,20 @@ function fetchAnnouncements(){
 
 // Login
 function login(){
-    const uname=document.getElementById('loginUser').value.trim();
+    const uname = document.getElementById('loginUser').value.trim();
     if(!uname){alert('Enter username'); return;}
-    currentUser=uname;
-    document.getElementById('uname').innerText=currentUser;
+    currentUser = uname;
+    document.getElementById('uname').innerText = currentUser;
     document.getElementById('loginDiv').classList.add('hidden');
     document.getElementById('homeDiv').classList.remove('hidden');
-    document.getElementById('headerUser').innerText=currentUser;
+    document.getElementById('headerUser').innerText = currentUser;
     document.getElementById('logoutBtn').classList.remove('hidden');
     document.getElementById('cartBtn').classList.remove('hidden');
-    if(uname.toLowerCase()==="dev999"){document.getElementById('devDiv').classList.remove('hidden');document.getElementById('homeDiv').classList.add('hidden');}
+    // Developer login
+    if(uname.toLowerCase() === "dev999"){
+        document.getElementById('devDiv').classList.remove('hidden');
+        document.getElementById('homeDiv').classList.add('hidden');
+    }
 }
 
 // On Load
