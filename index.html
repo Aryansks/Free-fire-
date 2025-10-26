@@ -80,7 +80,7 @@ let selectedCompany = '';
 let selectedModel = '';
 let cart = [];
 
-// --- Device Sensitivities (fixed) ---
+// --- Device Sensitivities ---
 const DEVICE_SENSI = {
   "Xiaomi": {
     "Redmi Note 13 Pro": {GENERAL:175,"RED DOT":155,"2X":160,"4X":140,"SNIPER SCOPE":135,"FREE CAMERA":145},
@@ -186,7 +186,6 @@ const DEVICE_SENSI = {
 };
 
 // --- Functions ---
-// Populate Companies
 function populateCompanies(){
   const companySelect = document.getElementById('companySelect');
   companySelect.innerHTML = '<option value="">Select Company</option>';
@@ -197,7 +196,6 @@ function populateCompanies(){
   });
 }
 
-// Populate Models
 function populateModels(){
   const modelSelect = document.getElementById('modelSelect');
   const company = document.getElementById('companySelect').value;
@@ -210,7 +208,6 @@ function populateModels(){
   }
 }
 
-// Login
 function login(){
   const username = document.getElementById('usernameInput').value.trim();
   const password = document.getElementById('passwordInput').value.trim();
@@ -227,7 +224,6 @@ function login(){
   } else { alert('Enter credentials'); }
 }
 
-// Logout
 function logout(){
   currentUser = null;
   localStorage.removeItem('ffSensiUser');
@@ -254,15 +250,111 @@ function showDevPanel(){
   document.getElementById('welcomeDiv').classList.add('hidden');
 }
 
-// Show SENSI
+// --- User Panel ---
 function showSensi(){
   document.getElementById('companyDiv').classList.remove('hidden');
-  const div = document.getElementById('sensiDiv');
-  div.classList.remove('hidden');
-  div.innerHTML = '<p>Select company and model above to view sensitivity</p>';
+  document.getElementById('sensiDiv').classList.remove('hidden');
+  document.getElementById('sensiDiv').innerHTML = '';
 }
 
-// One-time login on load
+function openBuyForm(){
+  const company = document.getElementById('companySelect').value;
+  const model = document.getElementById('modelSelect').value;
+  if(!company || !model){ alert('Select company and model first'); return; }
+  const div = document.getElementById('sensiDiv');
+  div.innerHTML = `
+    <h3>Buy ${model}</h3>
+    <input type="text" id="buyName" placeholder="Your Name"><br>
+    <input type="text" id="buyUid" placeholder="UID"><br>
+    <button onclick="submitRequest('${company}','${model}')">Submit</button>
+  `;
+}
+
+function addToCart(){
+  const company = document.getElementById('companySelect').value;
+  const model = document.getElementById('modelSelect').value;
+  if(!company || !model){ alert('Select company and model first'); return; }
+  cart.push({company,model});
+  alert(`${model} added to cart`);
+}
+
+function openCart(){
+  const div = document.getElementById('cartDiv');
+  div.classList.remove('hidden');
+  div.innerHTML = `<h3>Cart</h3>`;
+  cart.forEach((item,i)=>{
+    div.innerHTML += `<p>${i+1}. ${item.company} - ${item.model}</p>`;
+  });
+  if(cart.length>0) div.innerHTML += `<button onclick="checkout()">Continue</button>`;
+}
+
+function checkout(){
+  const div = document.getElementById('cartDiv');
+  div.innerHTML = `<h3>Checkout Form</h3>
+  <input type="text" id="checkoutName" placeholder="Your Name"><br>
+  <input type="text" id="checkoutUid" placeholder="UID"><br>
+  <button onclick="submitCart()">Submit</button>`;
+}
+
+function submitCart(){
+  const name = document.getElementById('checkoutName').value;
+  const uid = document.getElementById('checkoutUid').value;
+  cart.forEach(item=>{
+    const newRef = db.ref('requests').push();
+    newRef.set({username:name,uid,status:'PENDING',company:item.company,model:item.model});
+  });
+  alert('Request submitted!');
+  cart=[];
+  document.getElementById('cartDiv').innerHTML='';
+}
+
+function submitRequest(company,model){
+  const name = document.getElementById('buyName').value;
+  const uid = document.getElementById('buyUid').value;
+  db.ref('requests').push({username:name,uid,status:'PENDING',company,model});
+  alert('Request submitted!');
+  document.getElementById('sensiDiv').innerHTML='';
+}
+
+function showRequests(){
+  const div = document.getElementById('requestsDiv');
+  div.classList.remove('hidden');
+  div.innerHTML='<h3>Your Requests</h3>';
+  db.ref('requests').orderByChild('username').equalTo(currentUser).once('value',snapshot=>{
+    div.innerHTML='<h3>Your Requests</h3>';
+    snapshot.forEach(snap=>{
+      const r = snap.val();
+      div.innerHTML += `<p>Model: ${r.model} | STATUS: ${r.status}</p>`;
+    });
+  });
+}
+
+// --- Developer Panel ---
+function showDevRequests(){
+  const div = document.getElementById('devRequestsDiv');
+  div.classList.remove('hidden');
+  div.innerHTML='<h3>Incoming Requests</h3>';
+  db.ref('requests').once('value',snapshot=>{
+    snapshot.forEach(snap=>{
+      const r = snap.val();
+      div.innerHTML += `<p>${r.username} requested ${r.model} - ${r.status}</p>`;
+    });
+  });
+}
+
+function showAnnouncements(){
+  const div = document.getElementById('devAnnouncementsDiv');
+  div.classList.remove('hidden');
+  div.innerHTML='<h3>Announcements</h3>';
+  db.ref('announcements').once('value',snapshot=>{
+    snapshot.forEach(snap=>{
+      const a = snap.val();
+      div.innerHTML += `<p>${a.text}</p>`;
+    });
+  });
+}
+
+// --- On Load ---
 window.onload = function() {
   const savedUser = localStorage.getItem('ffSensiUser');
   if(savedUser){
@@ -273,6 +365,5 @@ window.onload = function() {
   }
 };
 </script>
-
 </body>
 </html>
