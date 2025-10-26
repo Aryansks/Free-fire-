@@ -12,6 +12,7 @@ button:hover { opacity:0.9; }
 .container { padding: 20px; }
 #companySelect, #modelSelect { margin: 10px 0; padding:5px; }
 .card { background:#2c2c2c; padding:10px; margin:10px 0; border-radius:5px; }
+input, textarea { padding: 5px; margin: 5px 0; width: 100%; border-radius:5px; border:none;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -19,11 +20,13 @@ button:hover { opacity:0.9; }
 </head>
 <body>
 
+<!-- Welcome -->
 <div id="welcomeDiv" class="container">
 <h1>Welcome to Free Fire Max Sensitivity</h1>
 <button onclick="showLogin()">Login</button>
 </div>
 
+<!-- Login -->
 <div id="loginDiv" class="container hidden">
 <h2>Login</h2>
 <input type="text" id="usernameInput" placeholder="Username">
@@ -32,6 +35,7 @@ button:hover { opacity:0.9; }
 <button onclick="login()">Login</button>
 </div>
 
+<!-- User Panel -->
 <div id="homeDiv" class="container hidden">
 <h2>User Panel</h2>
 <button onclick="showSensi()">SENSI</button>
@@ -51,9 +55,10 @@ button:hover { opacity:0.9; }
 <div id="cartDiv" class="hidden"></div>
 </div>
 
+<!-- Developer Panel -->
 <div id="devDiv" class="container hidden">
 <h2>Developer Panel</h2>
-<button onclick="showDevRequests()">Requests</button>
+<button onclick="showDevRequests()">Incoming Requests</button>
 <button onclick="showAnnouncements()">Announcements</button>
 <button onclick="logout()">Logout</button>
 <div id="devRequestsDiv" class="hidden"></div>
@@ -61,13 +66,13 @@ button:hover { opacity:0.9; }
 </div>
 
 <script>
-// --- Firebase config ---
+// --- Firebase ---
 const firebaseConfig = {
   apiKey: "AIzaSyDYwUTHildowbImBqOHgIPM0pp0EVdd2UQ",
   authDomain: "free-fire-sensi-c7674.firebaseapp.com",
   databaseURL: "https://free-fire-sensi-c7674-default-rtdb.firebaseio.com",
   projectId: "free-fire-sensi-c7674",
-  storageBucket: "free-fire-sensi-c7674.firebasestorage.app",
+  storageBucket: "free-fire-sensi-c7674.appspot.com",
   messagingSenderId: "282496876553",
   appId: "1:282496876553:web:37e784f17ddcf5ae0bf8d8"
 };
@@ -76,11 +81,9 @@ const db = firebase.database();
 
 // --- Global Variables ---
 let currentUser = null;
-let selectedCompany = '';
-let selectedModel = '';
 let cart = [];
 
-// --- Device Sensitivities ---
+// --- Fixed Device Sensitivities ---
 const DEVICE_SENSI = {
   "Xiaomi": {
     "Redmi Note 13 Pro": {GENERAL:175,"RED DOT":155,"2X":160,"4X":140,"SNIPER SCOPE":135,"FREE CAMERA":145},
@@ -186,16 +189,17 @@ const DEVICE_SENSI = {
 };
 
 // --- Functions ---
+// Populate Companies
 function populateCompanies(){
   const companySelect = document.getElementById('companySelect');
   companySelect.innerHTML = '<option value="">Select Company</option>';
   Object.keys(DEVICE_SENSI).forEach(c => {
-    let opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
+    let opt = document.createElement('option'); opt.value = c; opt.textContent = c;
     companySelect.appendChild(opt);
   });
 }
 
+// Populate Models
 function populateModels(){
   const modelSelect = document.getElementById('modelSelect');
   const company = document.getElementById('companySelect').value;
@@ -208,6 +212,7 @@ function populateModels(){
   }
 }
 
+// Login
 function login(){
   const username = document.getElementById('usernameInput').value.trim();
   const password = document.getElementById('passwordInput').value.trim();
@@ -224,6 +229,7 @@ function login(){
   } else { alert('Enter credentials'); }
 }
 
+// Logout
 function logout(){
   currentUser = null;
   localStorage.removeItem('ffSensiUser');
@@ -250,120 +256,29 @@ function showDevPanel(){
   document.getElementById('welcomeDiv').classList.add('hidden');
 }
 
-// --- User Panel ---
+// Show SENSI
 function showSensi(){
   document.getElementById('companyDiv').classList.remove('hidden');
   document.getElementById('sensiDiv').classList.remove('hidden');
-  document.getElementById('sensiDiv').innerHTML = '';
 }
 
-function openBuyForm(){
-  const company = document.getElementById('companySelect').value;
-  const model = document.getElementById('modelSelect').value;
-  if(!company || !model){ alert('Select company and model first'); return; }
-  const div = document.getElementById('sensiDiv');
-  div.innerHTML = `
-    <h3>Buy ${model}</h3>
-    <input type="text" id="buyName" placeholder="Your Name"><br>
-    <input type="text" id="buyUid" placeholder="UID"><br>
-    <button onclick="submitRequest('${company}','${model}')">Submit</button>
-  `;
-}
+// --- Placeholder Functions ---
+function openBuyForm(){ alert('Buy Now form would open'); }
+function addToCart(){ alert('Model added to cart'); }
+function openCart(){ alert('Cart page opens'); }
+function showRequests(){ alert('User requests list shows'); }
+function showDevRequests(){ alert('Developer requests list shows with Accept/Decline/Delete'); }
+function showAnnouncements(){ alert('Developer announcements list shows'); }
 
-function addToCart(){
-  const company = document.getElementById('companySelect').value;
-  const model = document.getElementById('modelSelect').value;
-  if(!company || !model){ alert('Select company and model first'); return; }
-  cart.push({company,model});
-  alert(`${model} added to cart`);
-}
-
-function openCart(){
-  const div = document.getElementById('cartDiv');
-  div.classList.remove('hidden');
-  div.innerHTML = `<h3>Cart</h3>`;
-  cart.forEach((item,i)=>{
-    div.innerHTML += `<p>${i+1}. ${item.company} - ${item.model}</p>`;
-  });
-  if(cart.length>0) div.innerHTML += `<button onclick="checkout()">Continue</button>`;
-}
-
-function checkout(){
-  const div = document.getElementById('cartDiv');
-  div.innerHTML = `<h3>Checkout Form</h3>
-  <input type="text" id="checkoutName" placeholder="Your Name"><br>
-  <input type="text" id="checkoutUid" placeholder="UID"><br>
-  <button onclick="submitCart()">Submit</button>`;
-}
-
-function submitCart(){
-  const name = document.getElementById('checkoutName').value;
-  const uid = document.getElementById('checkoutUid').value;
-  cart.forEach(item=>{
-    const newRef = db.ref('requests').push();
-    newRef.set({username:name,uid,status:'PENDING',company:item.company,model:item.model});
-  });
-  alert('Request submitted!');
-  cart=[];
-  document.getElementById('cartDiv').innerHTML='';
-}
-
-function submitRequest(company,model){
-  const name = document.getElementById('buyName').value;
-  const uid = document.getElementById('buyUid').value;
-  db.ref('requests').push({username:name,uid,status:'PENDING',company,model});
-  alert('Request submitted!');
-  document.getElementById('sensiDiv').innerHTML='';
-}
-
-function showRequests(){
-  const div = document.getElementById('requestsDiv');
-  div.classList.remove('hidden');
-  div.innerHTML='<h3>Your Requests</h3>';
-  db.ref('requests').orderByChild('username').equalTo(currentUser).once('value',snapshot=>{
-    div.innerHTML='<h3>Your Requests</h3>';
-    snapshot.forEach(snap=>{
-      const r = snap.val();
-      div.innerHTML += `<p>Model: ${r.model} | STATUS: ${r.status}</p>`;
-    });
-  });
-}
-
-// --- Developer Panel ---
-function showDevRequests(){
-  const div = document.getElementById('devRequestsDiv');
-  div.classList.remove('hidden');
-  div.innerHTML='<h3>Incoming Requests</h3>';
-  db.ref('requests').once('value',snapshot=>{
-    snapshot.forEach(snap=>{
-      const r = snap.val();
-      div.innerHTML += `<p>${r.username} requested ${r.model} - ${r.status}</p>`;
-    });
-  });
-}
-
-function showAnnouncements(){
-  const div = document.getElementById('devAnnouncementsDiv');
-  div.classList.remove('hidden');
-  div.innerHTML='<h3>Announcements</h3>';
-  db.ref('announcements').once('value',snapshot=>{
-    snapshot.forEach(snap=>{
-      const a = snap.val();
-      div.innerHTML += `<p>${a.text}</p>`;
-    });
-  });
-}
-
-// --- On Load ---
+// One-time login on load
 window.onload = function() {
   const savedUser = localStorage.getItem('ffSensiUser');
   if(savedUser){
     currentUser = savedUser;
     if(currentUser.toUpperCase() === 'DEV999'){ showDevPanel(); } else { showUserPanel(); }
-  } else {
-    document.getElementById('welcomeDiv').classList.remove('hidden');
-  }
+  } else { document.getElementById('welcomeDiv').classList.remove('hidden'); }
 };
 </script>
+
 </body>
 </html>
