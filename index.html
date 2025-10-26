@@ -12,9 +12,8 @@ button:hover { opacity:0.9; }
 .container { padding: 20px; }
 #companySelect, #modelSelect { margin: 10px 0; padding:5px; }
 .card { background:#2c2c2c; padding:10px; margin:10px 0; border-radius:5px; }
+.request-card { background:#333; padding:10px; margin:10px 0; border-radius:5px; }
 </style>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -59,14 +58,17 @@ button:hover { opacity:0.9; }
 <div id="devAnnouncementsDiv" class="hidden"></div>
 </div>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 <script>
-// --- Firebase Configuration ---
+// --- Firebase Config ---
 const firebaseConfig = {
   apiKey: "AIzaSyDYwUTHildowbImBqOHgIPM0pp0EVdd2UQ",
   authDomain: "free-fire-sensi-c7674.firebaseapp.com",
   databaseURL: "https://free-fire-sensi-c7674-default-rtdb.firebaseio.com",
   projectId: "free-fire-sensi-c7674",
-  storageBucket: "free-fire-sensi-c7674.firebasestorage.app",
+  storageBucket: "free-fire-sensi-c7674.appspot.com",
   messagingSenderId: "282496876553",
   appId: "1:282496876553:web:37e784f17ddcf5ae0bf8d8"
 };
@@ -79,50 +81,26 @@ let selectedCompany = '';
 let selectedModel = '';
 let cart = [];
 
-// --- Device Sensitivities (Fixed) ---
+// --- Device Sensitivities (fixed per model) ---
 const DEVICE_SENSI = {
 "Xiaomi": {
 "Redmi Note 13 Pro": { GENERAL: 175, "RED DOT": 155, "2X": 160, "4X": 140, "SNIPER SCOPE": 135, "FREE CAMERA": 145 },
 "Redmi Note 13 Pro+": { GENERAL: 171, "RED DOT": 157, "2X": 162, "4X": 142, "SNIPER SCOPE": 137, "FREE CAMERA": 147 },
-"Mi 12": { GENERAL: 155, "RED DOT": 160, "2X": 165, "4X": 145, "SNIPER SCOPE": 140, "FREE CAMERA": 150 },
-"Mi 11": { GENERAL: 153, "RED DOT": 158, "2X": 163, "4X": 143, "SNIPER SCOPE": 138, "FREE CAMERA": 148 },
-"Poco X6 Pro": { GENERAL: 151, "RED DOT": 156, "2X": 161, "4X": 141, "SNIPER SCOPE": 136, "FREE CAMERA": 146 },
-"Redmi 12C": { GENERAL: 150, "RED DOT": 155, "2X": 160, "4X": 140, "SNIPER SCOPE": 135, "FREE CAMERA": 145 },
-"Redmi 11 Prime": { GENERAL: 152, "RED DOT": 157, "2X": 162, "4X": 142, "SNIPER SCOPE": 137, "FREE CAMERA": 147 },
-"Redmi K60 Ultra": { GENERAL: 155, "RED DOT": 160, "2X": 165, "4X": 145, "SNIPER SCOPE": 140, "FREE CAMERA": 150 }
+"Mi 12": { GENERAL: 155, "RED DOT": 160, "2X": 165, "4X": 145, "SNIPER SCOPE": 140, "FREE CAMERA": 150 }
 },
 "iPhone": {
-"iPhone 16e": { GENERAL: 75, "RED DOT": 80, "2X": 129, "4X": 120, "SNIPER SCOPE": 90, "FREE CAMERA": 80 },
-"iPhone 15 Pro": { GENERAL: 152, "RED DOT": 157, "2X": 162, "4X": 142, "SNIPER SCOPE": 137, "FREE CAMERA": 147 },
-"iPhone 15": { GENERAL: 153, "RED DOT": 158, "2X": 163, "4X": 143, "SNIPER SCOPE": 138, "FREE CAMERA": 148 },
-"iPhone 14 Pro": { GENERAL: 155, "RED DOT": 160, "2X": 165, "4X": 145, "SNIPER SCOPE": 140, "FREE CAMERA": 150 },
-"iPhone 14": { GENERAL: 150, "RED DOT": 155, "2X": 160, "4X": 140, "SNIPER SCOPE": 135, "FREE CAMERA": 145 },
-"iPhone 13": { GENERAL: 152, "RED DOT": 157, "2X": 162, "4X": 142, "SNIPER SCOPE": 137, "FREE CAMERA": 147 },
-"iPhone 12 Mini": { GENERAL: 153, "RED DOT": 158, "2X": 163, "4X": 143, "SNIPER SCOPE": 138, "FREE CAMERA": 148 },
-"iPhone SE 3": { GENERAL: 155, "RED DOT": 160, "2X": 165, "4X": 145, "SNIPER SCOPE": 140, "FREE CAMERA": 150 }
+"iPhone 16e": { GENERAL: 175, "RED DOT": 160, "2X": 162, "4X": 150, "SNIPER SCOPE": 145, "FREE CAMERA": 155 },
+"iPhone 15 Pro": { GENERAL: 172, "RED DOT": 158, "2X": 160, "4X": 148, "SNIPER SCOPE": 142, "FREE CAMERA": 150 }
 },
 "Samsung": {
 "Galaxy S24 Ultra": { GENERAL: 155, "RED DOT": 160, "2X": 165, "4X": 145, "SNIPER SCOPE": 140, "FREE CAMERA": 150 },
-"Galaxy S23 Ultra": { GENERAL: 153, "RED DOT": 158, "2X": 163, "4X": 143, "SNIPER SCOPE": 138, "FREE CAMERA": 148 },
-"Galaxy S23+": { GENERAL: 152, "RED DOT": 157, "2X": 162, "4X": 142, "SNIPER SCOPE": 137, "FREE CAMERA": 147 },
-"Galaxy S23": { GENERAL: 150, "RED DOT": 155, "2X": 160, "4X": 140, "SNIPER SCOPE": 135, "FREE CAMERA": 145 },
-"Galaxy A54": { GENERAL: 150, "RED DOT": 155, "2X": 160, "4X": 140, "SNIPER SCOPE": 135, "FREE CAMERA": 145 },
-"Galaxy A14": { GENERAL: 152, "RED DOT": 157, "2X": 162, "4X": 142, "SNIPER SCOPE": 137, "FREE CAMERA": 147 },
-"Galaxy Z Fold5": { GENERAL: 155, "RED DOT": 160, "2X": 165, "4X": 145, "SNIPER SCOPE": 140, "FREE CAMERA": 150 },
 "Galaxy Z Flip5": { GENERAL: 153, "RED DOT": 158, "2X": 163, "4X": 143, "SNIPER SCOPE": 138, "FREE CAMERA": 148 }
 },
 "Nothing": {
-"Nothing Phone 1": { GENERAL: 170, "RED DOT": 180, "2X": 160, "4X": 150, "SNIPER SCOPE": 140, "FREE CAMERA": 170 },
-"Nothing Phone 1T": { GENERAL: 172, "RED DOT": 182, "2X": 162, "4X": 152, "SNIPER SCOPE": 142, "FREE CAMERA": 172 },
-"Nothing Phone 2": { GENERAL: 175, "RED DOT": 185, "2X": 165, "4X": 155, "SNIPER SCOPE": 145, "FREE CAMERA": 175 },
-"Nothing Phone 2T": { GENERAL: 178, "RED DOT": 188, "2X": 168, "4X": 158, "SNIPER SCOPE": 148, "FREE CAMERA": 178 },
-"Nothing Phone 3 Pro": { GENERAL: 180, "RED DOT": 190, "2X": 170, "4X": 160, "SNIPER SCOPE": 150, "FREE CAMERA": 180 },
-"Nothing Phone 3a": { GENERAL: 182, "RED DOT": 192, "2X": 172, "4X": 162, "SNIPER SCOPE": 152, "FREE CAMERA": 182 },
-"Nothing Phone 4": { GENERAL: 185, "RED DOT": 195, "2X": 175, "4X": 165, "SNIPER SCOPE": 155, "FREE CAMERA": 185 },
-"Nothing Phone 4a": { GENERAL: 188, "RED DOT": 198, "2X": 178, "4X": 168, "SNIPER SCOPE": 158, "FREE CAMERA": 188 }
+"Nothing Phone 1": { GENERAL: 170, "RED DOT": 180, "2X": 160, "4X": 150, "SNIPER SCOPE": 140, "FREE CAMERA": 170 }
 },
 "Oppo": {
-"Oppo Reno 10 Pro": { GENERAL: 170, "RED DOT": 180, "2X": 160, "4X": 150, "SNIPER SCOPE": 140, "FREE CAMERA": 170 },
+"Oppo Reno 10 Pro": { GENERAL: 170, "RED DOT": 180, "2X": 160, "4X": 150, "SNIPER SCOPE": 140, "FREE CAMERA": 170 }
 "Oppo F23": { GENERAL: 168, "RED DOT": 178, "2X": 158, "4X": 148, "SNIPER SCOPE": 138, "FREE CAMERA": 168 },
 "Oppo A77": { GENERAL: 165, "RED DOT": 175, "2X": 155, "4X": 145, "SNIPER SCOPE": 135, "FREE CAMERA": 165 },
 "Oppo Find X6": { GENERAL: 172, "RED DOT": 182, "2X": 162, "4X": 152, "SNIPER SCOPE": 142, "FREE CAMERA": 172 }
@@ -181,20 +159,20 @@ const DEVICE_SENSI = {
 "Asus ROG Phone 6": { GENERAL: 172, "RED DOT": 182, "2X": 162, "4X": 152, "SNIPER SCOPE": 142, "FREE CAMERA": 172 },
 "Asus ROG Phone 5": { GENERAL: 170, "RED DOT": 180, "2X": 160, "4X": 150, "SNIPER SCOPE": 140, "FREE CAMERA": 170 }
 }
-}; // End DEVICE_SENSI
+}; 
 
-// --- Populate Companies ---
+// --- Functions ---
+// Populate Companies
 function populateCompanies(){
   const companySelect = document.getElementById('companySelect');
   companySelect.innerHTML = '<option value="">Select Company</option>';
   Object.keys(DEVICE_SENSI).forEach(c => {
-    let opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
+    let opt = document.createElement('option'); opt.value = c; opt.textContent = c;
     companySelect.appendChild(opt);
   });
 }
 
-// --- Populate Models ---
+// Populate Models
 function populateModels(){
   const modelSelect = document.getElementById('modelSelect');
   const company = document.getElementById('companySelect').value;
@@ -207,7 +185,7 @@ function populateModels(){
   }
 }
 
-// --- Login ---
+// Login
 function login(){
   const username = document.getElementById('usernameInput').value.trim();
   const password = document.getElementById('passwordInput').value.trim();
@@ -224,7 +202,7 @@ function login(){
   } else { alert('Enter credentials'); }
 }
 
-// --- Logout ---
+// Logout
 function logout(){
   currentUser = null;
   localStorage.removeItem('ffSensiUser');
@@ -234,12 +212,24 @@ function logout(){
   document.getElementById('devDiv').classList.add('hidden');
 }
 
-// --- Show Panels ---
-function showLogin(){ document.getElementById('welcomeDiv').classList.add('hidden'); document.getElementById('loginDiv').classList.remove('hidden'); }
-function showUserPanel(){ document.getElementById('loginDiv').classList.add('hidden'); document.getElementById('homeDiv').classList.remove('hidden'); }
-function showDevPanel(){ document.getElementById('loginDiv').classList.add('hidden'); document.getElementById('devDiv').classList.remove('hidden'); }
+// Show Panels
+function showLogin(){
+  document.getElementById('welcomeDiv').classList.add('hidden');
+  document.getElementById('loginDiv').classList.remove('hidden');
+}
+function showUserPanel(){
+  document.getElementById('loginDiv').classList.add('hidden');
+  document.getElementById('homeDiv').classList.remove('hidden');
+  document.getElementById('welcomeDiv').classList.add('hidden');
+  document.getElementById('companyDiv').classList.remove('hidden');
+}
+function showDevPanel(){
+  document.getElementById('loginDiv').classList.add('hidden');
+  document.getElementById('devDiv').classList.remove('hidden');
+  document.getElementById('welcomeDiv').classList.add('hidden');
+}
 
-// --- Show SENSI ---
+// Show SENSI
 function showSensi(){
   document.getElementById('sensiDiv').classList.remove('hidden');
   const company = document.getElementById('companySelect').value;
@@ -248,19 +238,138 @@ function showSensi(){
   if(company && model){
     const sensi = DEVICE_SENSI[company][model];
     div.innerHTML = `<h3>${company} - ${model} Sensitivity</h3>`;
-    Object.keys(sensi).forEach(k=>{ div.innerHTML += `<p>${k}: ${sensi[k]}</p>`; });
+    Object.keys(sensi).forEach(k=>{
+      div.innerHTML += `<p>${k}: ${sensi[k]}</p>`;
+    });
   } else {
     div.innerHTML = '<p>Please select company and model</p>';
   }
 }
 
-// --- One-time login on load ---
-window.onload = function() {
+// CART
+function addToCart(){
+  const company = document.getElementById('companySelect').value;
+  const model = document.getElementById('modelSelect').value;
+  if(company && model){
+    cart.push({company, model});
+    alert('Added to cart');
+  } else { alert('Select company and model'); }
+}
+
+function openCart(){
+  const div = document.getElementById('cartDiv');
+  div.classList.remove('hidden');
+  div.innerHTML = '<h3>Cart</h3>';
+  if(cart.length === 0){ div.innerHTML += '<p>Cart is empty</p>'; return; }
+  cart.forEach((item,i)=>{
+    div.innerHTML += `<p>${i+1}. ${item.company} - ${item.model}</p>`;
+  });
+  div.innerHTML += `<button onclick="sendCartRequest()">Continue</button>`;
+}
+
+// Send cart request to Firebase
+function sendCartRequest(){
+  cart.forEach(item=>{
+    const newReq = db.ref('requests').push();
+    newReq.set({
+      uid: currentUser,
+      username: currentUser,
+      company: item.company,
+      model: item.model,
+      status: 'PENDING'
+    });
+  });
+  cart = [];
+  document.getElementById('cartDiv').innerHTML = '<p>Request sent!</p>';
+}
+
+// USER REQUESTS
+function showRequests(){
+  const div = document.getElementById('requestsDiv');
+  div.classList.remove('hidden');
+  div.innerHTML = '<h3>Your Requests</h3>';
+  db.ref('requests').once('value', snapshot=>{
+    const data = snapshot.val();
+    if(!data) { div.innerHTML += '<p>No requests found</p>'; return; }
+    Object.keys(data).forEach(key=>{
+      const req = data[key];
+      if(req.username === currentUser){
+        div.innerHTML += `<div class="request-card">
+        📱Model: ${req.model}<br>
+        Username: ${req.username}<br>
+        STATUS: ${req.status}<br>`;
+        if(req.status === 'ACCEPTED'){
+          const sensi = DEVICE_SENSI[req.company][req.model];
+          Object.keys(sensi).forEach(k=>{
+            div.innerHTML += `✅${k}: ${sensi[k]}<br>`;
+          });
+        }
+        if(req.status !== 'PENDING'){
+          div.innerHTML += `<button onclick="deleteRequest('${key}')">Delete Request</button>`;
+        }
+        div.innerHTML += `</div>`;
+      }
+    });
+  });
+}
+
+function deleteRequest(key){
+  db.ref('requests/'+key).remove();
+  showRequests();
+}
+
+// DEVELOPER PANEL
+function showDevRequests(){
+  const div = document.getElementById('devRequestsDiv');
+  div.classList.remove('hidden');
+  div.innerHTML = '<h3>Incoming Requests</h3>';
+  db.ref('requests').once('value', snapshot=>{
+    const data = snapshot.val();
+    if(!data) { div.innerHTML += '<p>No requests</p>'; return; }
+    Object.keys(data).forEach(key=>{
+      const req = data[key];
+      div.innerHTML += `<div class="request-card">
+        📱${req.company} - ${req.model}<br>
+        User: ${req.username}<br>
+        STATUS: ${req.status}<br>
+        <button onclick="updateRequest('${key}','ACCEPTED')">Accept</button>
+        <button onclick="updateRequest('${key}','DECLINED')">Decline</button>
+      </div>`;
+    });
+  });
+}
+
+function updateRequest(key,status){
+  db.ref('requests/'+key).update({status});
+  showDevRequests();
+}
+
+// ANNOUNCEMENTS
+function showAnnouncements(){
+  const div = document.getElementById('devAnnouncementsDiv');
+  div.classList.remove('hidden');
+  div.innerHTML = '<h3>Announcements</h3>';
+  db.ref('announcements').once('value', snapshot=>{
+    const data = snapshot.val();
+    if(!data){ div.innerHTML += '<p>No announcements</p>'; return; }
+    Object.keys(data).forEach(key=>{
+      div.innerHTML += `<div class="card">${data[key]}</div>`;
+    });
+  });
+}
+
+// One-time login
+window.onload = function(){
   const savedUser = localStorage.getItem('ffSensiUser');
-  if(savedUser){ currentUser = savedUser; if(currentUser.toUpperCase() === 'DEV999'){ showDevPanel(); } else { showUserPanel(); } }
-  else { document.getElementById('welcomeDiv').classList.remove('hidden'); }
+  if(savedUser){
+    currentUser = savedUser;
+    if(currentUser.toUpperCase() === 'DEV999'){ showDevPanel(); }
+    else { showUserPanel(); }
+  } else {
+    document.getElementById('welcomeDiv').classList.remove('hidden');
+  }
   populateCompanies();
 };
 </script>
 </body>
-</html>    
+</html>
